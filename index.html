@@ -1,0 +1,4339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AMA Muslim Koran App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- NEW: Import Tone.js for sound effects (restored from v27) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+  <style>
+    :root {
+      --bg: #050915;
+      --bg-soft: #0b1224;
+      --card: rgba(255, 255, 255, 0.05);
+      --card-strong: rgba(0, 0, 0, 0.35);
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #18b0ff;
+      --accent-soft: rgba(24, 176, 255, 0.25);
+      --gold: #f4c76a;
+      --sand: #e6d2a0;
+      --text: #f4f7ff;
+      --muted: #a5b0d1;
+      --error: #ff5c7a;
+      --success: #00d98b;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      --radius-lg: 20px;
+      --radius-xl: 26px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 0, rgba(24, 176, 255, 0.3), transparent 50%),
+        radial-gradient(circle at 90% 0, rgba(244, 199, 106, 0.25), transparent 55%),
+        linear-gradient(145deg, #02040a, #060c18 40%, #050915 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(90deg, rgba(5, 9, 21, 0.96), rgba(5, 9, 21, 0.9));
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-bar {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid rgba(244, 199, 106, 0.5);
+      background:
+        radial-gradient(circle at 30% 30%, #ffffff 0, #e6d2a0 32%, transparent 55%),
+        radial-gradient(circle at 70% 70%, rgba(24, 176, 255, 0.5), transparent 70%);
+      box-shadow: 0 0 18px rgba(244, 199, 106, 0.7);
+      position: relative;
+    }
+
+    .brand-logo::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0, 0, 0, 0.25);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-links button {
+      background: transparent;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 12px;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.18s ease-out;
+    }
+
+    .nav-links button:hover,
+    .nav-links button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: radial-gradient(circle at 0 0, rgba(24, 176, 255, 0.35), transparent 65%);
+      box-shadow: 0 0 18px rgba(24, 176, 255, 0.4);
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 18px auto 40px;
+      padding: 0 16px 32px;
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      background: linear-gradient(145deg, rgba(9, 17, 43, 0.96), rgba(4, 8, 22, 0.98));
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border);
+      padding: 22px 20px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 10% -10%, rgba(24, 176, 255, 0.18), transparent 55%),
+        radial-gradient(circle at 110% 120%, rgba(244, 199, 106, 0.19), transparent 45%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    h3 {
+      font-size: 16px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .tagline {
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--sand);
+      margin-bottom: 14px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 5px 11px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      background: radial-gradient(circle at 0 0, rgba(24, 176, 255, 0.18), transparent 65%);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 20px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 800px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 9px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #48d1ff);
+      color: #04101b;
+      box-shadow: 0 12px 26px rgba(24, 176, 255, 0.45);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.05);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--sand);
+      border: 1px solid rgba(244, 199, 106, 0.6);
+    }
+
+    .btn-outline:hover {
+      background: rgba(244, 199, 106, 0.1);
+    }
+
+    .section-header {
+      margin-bottom: 16px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .section-header small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    input,
+    select,
+    textarea {
+      background: rgba(3, 10, 25, 0.96);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 8px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(24, 176, 255, 0.4);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .subcard {
+      background: radial-gradient(circle at 20% 0, rgba(24, 176, 255, 0.2), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(244, 199, 106, 0.18), transparent 55%),
+        var(--card-strong);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 14px 14px 12px;
+      margin-bottom: 10px;
+    }
+
+    .subcard-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--sand);
+      margin-bottom: 4px;
+    }
+
+    .code-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(244, 199, 106, 0.7);
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--sand);
+      margin-right: 6px;
+      margin-top: 4px;
+    }
+
+    .mono {
+      font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    }
+
+    .small-muted {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .badge-soft {
+      border: 1px solid rgba(24, 176, 255, 0.7);
+      background: rgba(24, 176, 255, 0.12);
+      color: var(--accent);
+    }
+
+    .badge-gold {
+      border: 1px solid rgba(244, 199, 106, 0.7);
+      background: rgba(244, 199, 106, 0.16);
+      color: var(--sand);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      font-size: 11px;
+      color: var(--muted);
+      margin-right: 5px;
+      margin-bottom: 4px;
+    }
+
+    .quran-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .quran-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .quran-display {
+      max-height: 420px;
+      overflow: auto;
+      padding: 10px;
+      border-radius: 14px;
+      background: radial-gradient(circle at 10% 0, rgba(24, 176, 255, 0.12), transparent 55%),
+        rgba(2, 7, 20, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .ayah {
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+    }
+
+    .ayah-meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .ayah-text-en {
+      font-size: 13px;
+    }
+
+    .ayah-text-ar {
+      font-size: 16px;
+      direction: rtl;
+      margin-bottom: 4px;
+      color: #f7f3de;
+      letter-spacing: 0.04em;
+    }
+
+    .search-results {
+      max-height: 180px;
+      overflow: auto;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.07);
+    }
+
+    .search-item {
+      font-size: 12px;
+      padding: 5px 6px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .search-item:hover {
+      background: rgba(24, 176, 255, 0.16);
+    }
+
+    .quiz-question {
+      margin-bottom: 10px;
+    }
+
+    .quiz-options button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      border: 1px solid #333;
+      background: #f0f4ff;
+      color: #000;
+      padding: 10px 12px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.16s ease-out;
+    }
+
+    .quiz-options button:hover {
+      background: #d6e4ff;
+      border-color: #111;
+    }
+
+    .quiz-options button.correct {
+      border-color: var(--success);
+      background: rgba(0, 217, 139, 0.12);
+    }
+
+    .quiz-options button.incorrect {
+      border-color: var(--error);
+      background: rgba(255, 92, 122, 0.1);
+    }
+
+    .quiz-meta {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 18px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .story-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    iframe {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      min-height: 220px;
+    }
+
+    .yt-card {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+    }
+    .yt-card a {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+    .yt-thumb {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .yt-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.15));
+      text-align: center;
+    }
+    .yt-play {
+      font-size: 32px;
+      margin-bottom: 6px;
+    }
+    .yt-text {
+      font-size: 13px;
+      color: #f4f7ff;
+    }
+
+    .news-item {
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+    }
+
+    .news-item h4 {
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .news-item p {
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .back-link {
+      margin-top: 14px;
+    }
+
+    .error-text {
+      color: var(--error);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .highlight {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* SPLASH COVER */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 0, rgba(24, 176, 255, 0.3), transparent 55%),
+        radial-gradient(circle at 90% 10%, rgba(244, 199, 106, 0.25), transparent 55%),
+        linear-gradient(145deg, #02040a, #050915);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    #splashCard {
+      max-width: 520px;
+      width: 92%;
+      background: linear-gradient(150deg, rgba(4, 10, 28, 0.98), rgba(7, 18, 46, 0.98));
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.8);
+      padding: 20px 20px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #splashCard::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 10% -10%, rgba(24, 176, 255, 0.3), transparent 60%),
+        radial-gradient(circle at 120% 130%, rgba(244, 199, 106, 0.24), transparent 50%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    #splashInner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .splash-title {
+      font-size: 22px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .splash-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .splash-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    /* NEW: Styles for Game Credits Display */
+    .game-credits-display {
+      background: radial-gradient(circle at 50% 0, rgba(255, 92, 122, 0.1), transparent 60%),
+        rgba(0,0,0,0.3);
+      border: 1px solid var(--error);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .game-credits-display .subcard-title {
+      color: var(--error);
+      letter-spacing: 0.1em;
+    }
+    .game-credits-display-lg {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 4px;
+    }
+    .game-credits-display-lg .credits-display-value {
+      color: var(--error);
+    }
+    .credits-welcome-message {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      margin-bottom: 0;
+      display: block;
+    }
+
+    /* NEW: Styles for Tic Tac Toe */
+    .ttt-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 300px;
+      margin: 16px auto;
+    }
+    .ttt-cell {
+      width: 100%;
+      aspect-ratio: 1 / 1; /* Makes cells square */
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 48px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .ttt-cell:hover {
+      background: var(--card-strong);
+    }
+    .ttt-cell.x { color: var(--accent); }
+    .ttt-cell.o { color: var(--gold); }
+
+    .ttt-status {
+      text-align: center;
+      font-size: 14px;
+      color: var(--sand);
+      margin-top: 10px;
+      min-height: 20px;
+    }
+
+    /* NEW: Styles for level selection */
+    .level-selector {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .level-selector label {
+      display: block;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.2);
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+    .level-selector input {
+      display: none;
+    }
+    .level-selector input:checked + label {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--text);
+      box-shadow: 0 0 10px var(--accent-soft);
+    }
+
+    /* NEW: Styles for placeholder game boards */
+    .placeholder-board {
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre;
+      text-align: center;
+      margin-top: 16px;
+      overflow-x: auto;
+    }
+
+    /* NEW: Styles for clickable titles */
+    .clickable-title {
+      cursor: pointer;
+      color: var(--accent-soft);
+      transition: color 0.2s ease;
+    }
+    .clickable-title:hover {
+      color: var(--accent);
+    }
+
+    /* NEW: Styles for charts */
+    .chart-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 14px;
+    }
+    .chart-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chart-label {
+      flex-basis: 120px;
+      flex-shrink: 0;
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .chart-label strong {
+      color: var(--sand);
+      font-size: 13px;
+      display: block;
+    }
+    .chart-bar-wrapper {
+      flex-grow: 1;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .chart-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+      color: #000;
+      font-weight: 700;
+      font-size: 16px;
+      border-radius: 999px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    /* 9 colors for numbers */
+    .chart-num-1 { background: linear-gradient(135deg, #ff6b6b, #ffbaba); color: #500; }
+    .chart-num-2 { background: linear-gradient(135deg, #ffa07a, #ffdcb2); color: #520; }
+    .chart-num-3 { background: linear-gradient(135deg, #f0e68c, #fffacd); color: #440; }
+    .chart-num-4 { background: linear-gradient(135deg, #98fb98, #d0fdd0); color: #030; }
+    .chart-num-5 { background: linear-gradient(135deg, #87cefa, #c0e6ff); color: #004; }
+    .chart-num-6 { background: linear-gradient(135deg, #add8e6, #e0f4ff); color: #003; }
+    .chart-num-7 { background: linear-gradient(135deg, #ba55d3, #efcfff); color: #203; }
+    .chart-num-8 { background: linear-gradient(135deg, #c0c0c0, #ffffff); color: #222; }
+    .chart-num-9 { background: linear-gradient(135deg, #f4c76a, #fff3d4); color: #430; }
+
+    .explanation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .explanation-item {
+      background: var(--card-strong);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .explanation-item strong {
+      color: var(--sand);
+      font-size: 13px;
+    }
+    .explanation-item p {
+      font-size: 12px;
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SPLASH COVER -->
+<div id="splash">
+  <div id="splashCard">
+    <div id="splashInner">
+      <div class="tagline">Ask Morpheus Alliance</div>
+      <div class="splash-title">AMA Muslim Koran App</div>
+      <p class="splash-sub">
+        Enter your name, choose if you want sound, and step into a reader with all
+        <span class="highlight">114</span> chapters of the Qur’an, quizzes, and birth codes.
+      </p>
+
+      <div class="field-group">
+        <label for="splashName">First Name or Moniker</label>
+        <input id="splashName" type="text" placeholder="e.g., Cathy, Dean, Seeker..." />
+      </div>
+
+      <div class="splash-row">
+        <label class="small-muted" style="display:flex;align-items:center;gap:6px;">
+          <input id="splashSound" type="checkbox" checked />
+          Sound on (voice welcome + surah audio)
+        </label>
+        <span class="chip">
+          <span class="mono">114</span>
+          <span>Surahs</span>
+        </span>
+      </div>
+
+      <div class="btn-row" style="margin-top:18px;">
+        <button class="btn btn-primary" type="button" onclick="enterApp()">Enter App</button>
+        <button class="btn btn-ghost" type="button" onclick="enterAppMuted()">Enter with Sound Off</button>
+      </div>
+
+      <p class="small-muted" style="margin-top:10px;">
+        On entry, if your browser allows it, you’ll hear a short greeting: “Welcome, Seeker.”
+      </p>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="nav-bar">
+    <div class="brand">
+      <div class="brand-logo"></div>
+      <div class="brand-text">
+        <span class="brand-title">AMA Muslim Koran App</span>
+        <span class="brand-sub">Read · Reflect · Play · Seek</span>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <button class="active" onclick="showSection('home')">Home</button>
+      <button onclick="showSection('birth')">AMA Birth Code</button>
+      <button onclick="showSection('quran')">Koran Reader</button>
+      <button onclick="showSection('quiz')">Quizzes</button>
+      <button onclick="showSection('stories')">Stories & News</button>
+      <button onclick="showSection('about')">Help / About</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section id="home" class="section active">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <div class="tagline">Ask Morpheus Alliance</div>
+            <h1>Welcome, <span id="welcomeName">Seeker</span></h1>
+            <p>
+              This is a quiet space to read the Qur’an, play through gentle quizzes, and see how your
+              name and birth date map into an AMA birth code and Mayan destiny key.
+            </p>
+          </div>
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">Universal Day Code (Vancouver)</div>
+              <p id="universalToday" class="small-muted">
+                Calculating today’s universal life path number...
+              </p>
+              <div id="dailyPrayer"></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid">
+          <div>
+            <h3>Start Your Journey</h3>
+            <p>
+              Begin by entering your first name and birth date. We’ll calculate your
+              <span class="highlight">MGKID</span> (Moniker: Cornerstone + Life Path),
+              your <span class="highlight">CSKID</span> (Cornerstone Birth Key), and your Mayan-based
+              <span class="highlight">DSKID</span> (Destiny Birth Key).
+            </p>
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="showSection('birth')">
+                Start as a Seeker
+              </button>
+              <button class="btn btn-ghost" onclick="showSection('quran')">
+                Read the Koran
+              </button>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-ghost" onclick="showSection('quiz')">
+                Play &amp; Learn (Quizzes)
+              </button>
+              <button class="btn btn-outline" onclick="showSection('stories')">
+                Muslim Life Stories &amp; News
+              </button>
+            </div>
+          </div>
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">Today’s App Rooms</div>
+              <p>
+                • <span class="highlight">AMA Birth Code Room</span> – MGKID, CSKID, DSKID<br />
+                • <span class="highlight">Koran Reader Room</span> – all 114 Surahs + search<br />
+                • <span class="highlight">Game Room</span> – multiple-choice quizzes with credits<br />
+                • <span class="highlight">Stories &amp; News Room</span> – real life, real journeys
+              </p>
+              <p class="small-muted">
+                Nothing here replaces real religious study. Treat it as a companion, not a verdict.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AMA BIRTH CODE -->
+  <section id="birth" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>AMA Birth Code Room</h2>
+            <small>CPAL-R : MGKID · CSKID · DSKID · Vibrational Triangle</small>
+          </div>
+          <div class="badge badge-gold">
+            <span>CPAL-R Breakdown</span>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <form onsubmit="event.preventDefault(); calculateProfile();">
+              <div class="field-group">
+                <label for="nameInput">First Name (Cornerstone)</label>
+                <input id="nameInput" type="text" placeholder="e.g., Cathy" />
+              </div>
+              <div class="field-group">
+                <label for="bloodTypeSelect">Blood Type (optional)</label>
+                <select id="bloodTypeSelect">
+                  <option value="">Select blood type...</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="dobInput">Birth Date (Gregorian)</label>
+                <input id="dobInput" type="date" />
+                <div id="birthError" class="error-text" style="display:none;"></div>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn btn-primary" type="submit">
+                  Calculate CPAL · CSKID · DSKID
+                </button>
+                <button class="btn btn-ghost" type="button" onclick="resetProfile()">
+                  Reset
+                </button>
+              </div>
+            </form>
+
+            <div class="subcard" style="margin-top:12px;">
+              <div class="subcard-title">Four AMA Rooms</div>
+              <p class="small-muted">
+                Once your CPAL is set, walk through these four questions as separate rooms.
+              </p>
+              <div class="btn-row">
+                <button class="btn btn-outline" type="button" onclick="showSection('who')">
+                  Who am I?
+                </button>
+                <button class="btn btn-outline" type="button" onclick="showSection('where')">
+                  Where am I?
+                </button>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-outline" type="button" onclick="showSection('how')">
+                  How am I?
+                </button>
+                <button class="btn btn-outline" type="button" onclick="showSection('become')">
+                  What am I to become?
+                </button>
+              </div>
+            </div>
+
+            <div class="back-link">
+              <button class="btn btn-ghost" onclick="showSection('home')">Back to Home</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">CPAL-R Breakdown</div>
+              <p class="small-muted">
+                C = Cornerstone letter of your first name<br />
+                P = Psyche (how you see yourself) – from day of birth<br />
+                A = Attitude (how people tend to see you) – from P + month root<br />
+                L = Life Path (soul’s walk) – from A + year root<br />
+                R = Role of society. Higher purpose Mayan Glyph
+              </p>
+
+              <div id="cpalDisplay" style="margin-top:8px;">
+                <p class="small-muted">
+                  Enter your details and your CPAL-R will appear here.
+                </p>
+              </div>
+
+              <div id="triangleDisplay" style="margin-top:8px;"></div>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">MGKID, CSKID &amp; DSKID: explained</div>
+              <div id="codesDisplay">
+                <p class="small-muted" style="margin-bottom: 4px;"><strong>MGKID = CL</strong> — Moniker. Who am I?</p>
+                <p class="small-muted" style="margin-bottom: 4px;"><strong>CSKID = CPAL</strong> — Cornerstone Birth Key. Where am I?</p>
+                <p class="small-muted"><strong>DSKID = CSKID + R</strong> — Destiny Birth Key. What am I to become?</p>
+                <p class="small-muted" style="margin-top: 8px;">Calculate your profile to see your personal code buttons.</p>
+              </div>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">Mayan Destiny Snapshot</div>
+              <div id="mayanDisplay">
+                <p class="small-muted">
+                  We use the AMA in-house Mayan Tzolkin algorithm with a sacred +3 tone offset.
+                  You’ll see:
+                  <br />• Galactic Tone (1–13)
+                  <br />• Day Glyph
+                  <br />• Trecena Glyph (cycle leader)
+                </p>
+              </div>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">Sample: Cathy (Sept 25, 1963)</div>
+              <p class="small-muted">
+                For Cathy, born September 25, 1963, the vibrational triangle (month root – day root – year root)
+                is <span class="mono">9-7-1</span>. These three points can be used later to map her LifeSpan code
+                and Life Challenge code for deeper readings in this room.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KORAN READER -->
+  <section id="quran" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Koran Reader Room</h2>
+            <small>114 Surahs · Arabic + Sahih International · Audio Header</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>Reading Mode</span>
+          </div>
+        </div>
+
+        <div class="quran-layout">
+          <div>
+            <div class="field-group">
+              <label for="surahSelect">
+                Choose Surah (there are 114 chapters in the Qur’an)
+              </label>
+              <select id="surahSelect" onchange="renderSurahFromSelect()"></select>
+            </div>
+
+            <div class="field-group">
+              <label for="searchInput">Search Translation (current Surah)</label>
+              <input
+                id="searchInput"
+                type="text"
+                placeholder="Type a word, e.g., mercy, guidance..."
+                oninput="searchQuran()"
+              />
+            </div>
+
+            <div class="subcard" style="margin-top:10px;">
+              <div class="subcard-title">Search Results</div>
+              <div id="searchResults" class="search-results">
+                <p class="small-muted">
+                  Results will appear here. Click a result to jump to that verse.
+                </p>
+              </div>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">Header Audio</div>
+              <p class="small-muted">
+                Play a short recitation from the beginning of this Surah. Use sound toggle if you
+                don’t want any audio.
+              </p>
+              <div class="btn-row">
+                <button class="btn btn-primary" type="button" onclick="toggleSurahAudio()">
+                  Play / Pause Surah Header
+                </button>
+                <label class="small-muted" style="display:flex;align-items:center;gap:6px;">
+                  <input id="headerSoundToggle" type="checkbox" checked />
+                  Header audio enabled
+                </label>
+              </div>
+            </div>
+
+            <div class="back-link">
+              <button class="btn btn-ghost" onclick="showSection('home')">Back to Home</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">Surah View</div>
+              <div id="quranDisplay" class="quran-display"></div>
+              <p class="small-muted" style="margin-top:6px;">
+                Arabic text + Sahih International translation loaded live from AlQuran.Cloud.
+              </p>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">Suggested Reading</div>
+              <p id="suggestedReading" class="small-muted">
+                Once you generate your CSKID and DSKID, this box can suggest Surahs or themes
+                linked to your profile.
+              </p>
+            </div>
+
+            <audio id="surahAudio"></audio>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ ROOM -->
+  <section id="quiz" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <!-- UPDATED: Title -->
+            <h2>Game Room Hub</h2>
+            <small>Play · Learn · Earn Credits</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>Seeker Level</span>
+          </div>
+        </div>
+
+        <!-- NEW: Game Credits Display -->
+        <div class="game-credits-display">
+          <div class="subcard-title">AMA Seeker Credits</div>
+          <div class="game-credits-display-lg">
+            <span class="credits-display-value" id="quizCreditsDisplay">300</span> Credits
+          </div>
+          <span class="credits-welcome-message">Welcome, Seeker.</span>
+        </div>
+
+        <!-- NEW: Game Room Hub Links -->
+        <div class="subcard" style="margin-bottom: 16px;">
+          <div class="subcard-title">Select a Game</div>
+          <p class="small-muted">Select a game to play. More games coming soon.</p>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="showSection('quizGame')">Quizzes</button>
+            <button class="btn btn-ghost" onclick="showSection('tictactoeRoom')">Tic Tac Toe</button>
+            <button class="btn btn-ghost" onclick="showSection('checkersRoom')">Checkers</button>
+            <button class="btn btn-ghost" onclick="showSection('chessRoom')">Chess</button>
+            <button class="btn btn-ghost" onclick="showSection('sudokuRoom')">Sudoku</button>
+          </div>
+        </div>
+
+        <!-- This section is now just a placeholder, the actual quiz is in 'quizGame' -->
+        <div class="grid">
+          <div>
+            <h3>Quizzes</h3>
+            <p>Test your knowledge on the Qur’an, stories of the prophets, and pillars of faith. Earn credits for correct answers.</p>
+            <button class="btn btn-primary" onclick="showSection('quizGame')">Start Quizzes</button>
+          </div>
+          <div>
+            <h3>Classic Games</h3>
+            <p>Play classic strategy and logic games like Tic Tac Toe, Checkers, Chess, and Sudoku. Earn (and risk!) credits as you play.</p>
+            <button class="btn btn-ghost" onclick="showSection('tictactoeRoom')">Play Tic Tac Toe</button>
+          </div>
+        </div>
+        
+        <div class="back-link">
+          <button class="btn btn-ghost" onclick="showSection('home')">Back to Home</button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- STORIES & NEWS -->
+  <section id="stories" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Stories &amp; News</h2>
+            <small>Real Life · Real Journeys</small>
+          </div>
+          <div class="badge badge-gold">
+            <span>Muslim Life</span>
+          </div>
+        </div>
+
+        <div class="story-grid">
+          <div>
+            <h3>Featured Video</h3>
+            <p class="small-muted">
+              A story of someone raised Christian who read the Qur’an and shared their journey.
+            </p>
+            <div class="yt-card">
+              <a href="https://www.youtube.com/watch?v=NMj5NIywDAo" target="_blank" rel="noopener noreferrer">
+                <img
+                  src="https://i.ytimg.com/vi/NMj5NIywDAo/hqdefault.jpg"
+                  alt="Journey to the Qur’an"
+                  class="yt-thumb"
+                />
+                <div class="yt-overlay">
+                  <div class="yt-play">▶</div>
+                  <div class="yt-text">Watch this journey on YouTube</div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">News &amp; Articles (sample)</div>
+              <div class="news-item">
+                <h4>Young Muslims Building Community</h4>
+                <p>
+                  A look at how young believers are creating welcoming, inclusive spaces in their
+                  cities.
+                </p>
+                <a href="#" target="_blank">Read more (placeholder)</a>
+              </div>
+              <div class="news-item">
+                <h4>Everyday Acts of Charity</h4>
+                <p>
+                  Small daily acts of kindness inspired by the Qur’an and the example of the
+                  Prophet ﷺ.
+                </p>
+                <a href="#" target="_blank">Read more (placeholder)</a>
+              </div>
+              <div class="news-item">
+                <h4>Ramadan in a New Country</h4>
+                <p>
+                  How one family kept their traditions alive after migrating to a new land.
+                </p>
+                <a href="#" target="_blank">Read more (placeholder)</a>
+              </div>
+              <div class="news-item">
+                <h4>Faith and Work Balance</h4>
+                <p>
+                  Muslims finding ways to align prayer, family, and career without burning out.
+                </p>
+                <a href="#" target="_blank">Read more (placeholder)</a>
+              </div>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">Life Snapshots</div>
+              <p class="small-muted">
+                • A mother breaks her fast on a bus, sharing dates with strangers.<br />
+                • A student takes a quiet moment between exams for dhuhr prayer.<br />
+                • A shop owner closes early on Friday to attend Jumu’ah.<br />
+                • A neighbour leaves food at the door of someone too shy to ask for help.
+              </p>
+            </div>
+
+            <div class="back-link">
+              <button class="btn btn-ghost" onclick="showSection('home')">Back to Home</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHO AM I ROOM -->
+  <section id="who" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Who am I?</h2>
+            <small>CL Moniker · Cornerstone + Life Path</small>
+          </div>
+          <div class="badge badge-gold">
+            <span>Identity Room</span>
+          </div>
+        </div>
+        
+        <!-- NEW: Surgically inserted professional explanation -->
+        <div class="subcard" style="border-color: var(--accent-soft);">
+            <div class="subcard-title">The Seeker's Map</div>
+            <p class="small-muted">
+              Think of your life as a multi-story building.
+            </p>
+            <p class="small-muted" style="margin-top: 4px;">
+              • Your <strong class="highlight">Life Path (L)</strong> is the grand blueprint of the building—the soul's walk you are enrolled to complete.
+            </p>
+            <p class="small-muted" style="margin-top: 4px;">
+              • The <strong class="highlight">Period Cycles</strong> are the different "floors"—the major stages of your life (Genesis, Adulthood, Exodus).
+            </p>
+            <p class="small-muted" style="margin-top: 4px;">
+              • The <strong class="highlight">Pinnacle Cycles</strong> are the "rungs on the stairs" that map your journey and focus *between* those floors.
+            </p>
+        </div>
+
+        <!-- FIXED: Corrected grid layout for this room -->
+        <div class="grid">
+          <div>
+            <!-- This is where the MGKID (whoContent) goes -->
+            <div class="subcard">
+              <div class="subcard-title">Your CL Moniker (MGKID)</div>
+              <div id="whoContent">
+                <p class="small-muted">Calculate your CPAL in the AMA Birth Code Room first, then return here.</p>
+              </div>
+            </div>
+
+            <!-- This is where the Period Cycle (periodCycleContent) goes -->
+            <div class="subcard" style="margin-top:12px;">
+              <div class="subcard-title clickable-title" onclick="showSection('periodChartRoom')">
+                Lifespan Room: Period Cycle ▶
+              </div>
+              <div id="periodCycleContent">
+                <p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your 3 Life Periods.</p>
+              </div>
+            </div>
+            
+            <div class="back-link">
+              <button class="btn btn-ghost" onclick="showSection('birth')">Back to Birth Code</button>
+            </div>
+          </div>
+
+          <div>
+            <!-- This is where the Pinnacle Cycle (pinnacleCycleContent) goes -->
+            <div class="subcard">
+              <div class="subcard-title clickable-title" onclick="showSection('pinnacleChartRoom')">
+                Lifespan Room: Pinnacle Cycle ▶
+              </div>
+              <div id="pinnacleCycleContent">
+                <p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your 4 Pinnacle Cycles.</p>
+              </div>
+            </div>
+
+            <!-- This is where the Life Challenge (lifeChallengeContent) goes -->
+            <div class="subcard" style="margin-top:12px;">
+              <div class="subcard-title clickable-title" onclick="showSection('lifeChallengeRoom')">
+                Lifespan Room: Life Challenge ▶
+              </div>
+              <div id="lifeChallengeContent">
+                <p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your 4 Life Challenges.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHERE AM I ROOM -->
+  <section id="where" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Where am I?</h2>
+            <small>Universal Year · Personal Year · Time Windows</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>Time Room</span>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">Universal Year 2025</div>
+              <p class="small-muted">
+                2025 is treated here as a year of letting go, completion, and compassion – a year to
+                remove what no longer fits so you can travel lighter.
+              </p>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">Your Personal Year</div>
+              <div id="whereContent">
+                <p class="small-muted">
+                  Once you set your CPAL in the Birth Code Room, this panel will estimate your
+                  personal year by adding your Life Path to your age in the current year and
+                  reducing it to a single digit.
+                </p>
+              </div>
+            </div>
+
+            <div class="back-link">
+              <button class="btn btn-ghost" onclick="showSection('birth')">Back to Birth Code</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">Today’s Date Window</div>
+              <p id="whereToday" class="small-muted">
+                Today’s universal date code is being calculated from the Vancouver time zone.
+              </p>
+              <p class="small-muted">
+                Later, you can expand this room into a full grid: year code, month code, and day
+                code to see which part of the story you’re living through.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW AM I ROOM -->
+  <section id="how" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>How am I?</h2>
+            <small>Zodiac House · Cell Salt · Blood Type Lens</small>
+          </div>
+          <div class="badge badge-gold">
+            <span>Lantern 12 · Body Room</span>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <div class="field-group">
+              <label for="bloodInput">Blood Type (for Eat Right 4 Your Type lens)</label>
+              <select id="bloodInput" onchange="updateHowRoom()">
+                <option value="">Select...</option>
+                <option value="O">O</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="AB">AB</option>
+              </select>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">Your House &amp; Body Snapshot</div>
+              <div id="howContent">
+                <p class="small-muted">
+                  Once you set your CPAL-R in the Birth Code Room, this space will show your Sun sign,
+                  its natural House, element, cell salt, body zone, and a short health reminder. The blood
+                  type is just a loose dietary lens, never a diagnosis.
+                </p>
+              </div>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">Health Is Wealth · Links</div>
+              <p class="small-muted">
+                • Eat Right 4 Your Type — blood-type diet overview (dadamo.com)<br />
+                • Cell Salts &amp; Biochemic Medicine — basic cell-salt reading<br />
+                • Ayurvedic Food Energies — how foods feel in the body<br />
+                • Healthy Eating Plate — simple visual for everyday meals
+              </p>
+
+            </div>
+
+            <div class="back-link">
+              <button class="btn btn-ghost" onclick="showSection('birth')">Back to Birth Code</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">Lantern 12 (Oct–Dec) · Seasonal Foods</div>
+              <p class="small-muted">
+                <strong>October — Libra Foods (Balance &amp; Kidneys)</strong><br />
+                Grapes, apples, pears, cucumber, mint, and high‑water fruits. Think flushing, softening,
+                and restoring mineral balance.
+              </p>
+              <p class="small-muted">
+                <strong>November — Scorpio Foods (Detox &amp; Regeneration)</strong><br />
+                Dark berries, pomegranate, beets, fermented foods, garlic, and onion. Deep-cleaning
+                for the blood and hidden tension.
+              </p>
+              <p class="small-muted">
+                <strong>December — Sagittarius Foods (Liver Support)</strong><br />
+                Turmeric, bitter greens, citrus, high‑antioxidant fruits, and whole grains. Support the
+                liver through holiday indulgence and big plans.
+              </p>
+              <p class="small-muted">
+                Use Lantern 12 as a reminder: what you eat in these three months tunes the body for the
+                new year’s journey.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT AM I TO BECOME ROOM -->
+  <section id="become" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>What am I to become?</h2>
+            <small>Higher Purpose · Mayan Role</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>Destiny Room</span>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">Your Mayan Signature</div>
+              <div id="becomeContent">
+                <p class="small-muted">
+                  Once you calculate your CPAL in the Birth Code Room, your Mayan tone, glyph, and
+                  trecena will appear there. This room focuses on what that glyph might say about
+                  “what I am to become”.
+                </p>
+              </div>
+            </div>
+
+            <div class="back-link">
+              <button class="btn btn-ghost" onclick="showSection('birth')">Back to Birth Code</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">Look Up Another Mayan Signature</div>
+              <div class="field-group">
+                <label for="mayanLookup">Birth Date (Gregorian)</label>
+                <input id="mayanLookup" type="date" />
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-primary" type="button" onclick="lookupMayan()">
+                  Get Mayan Tone &amp; Glyph
+                </button>
+              </div>
+              <div id="mayanLookupResult" style="margin-top:8px;">
+                <p class="small-muted">
+                  Enter a birth date to see its Mayan tone, day glyph, and trecena using the same
+                  AMA algorithm.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HELP / ABOUT -->
+  <section id="about" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Help &amp; About</h2>
+            <small>What this is · What it is not</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>Read Me First</span>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <h3>What is AMA?</h3>
+            <p>
+              AMA stands for <span class="highlight">Ask Morpheus Alliance</span>. It’s a creative
+              framework for seekers who like to ask “Who am I?”, “Where am I going?”, “How am I?”,
+              and “What am I to become?”.
+            </p>
+            <p>
+              This app blends simple numerology, a Mayan-style date key, and light Qur’an study into
+              one experience. It’s here to educate and entertain – not to judge anyone’s faith or
+              replace real scholarship.
+            </p>
+          </div>
+          <div>
+            <h3>What this app is not</h3>
+            <p>
+              • Not a fatwa site<br />
+              • Not a replacement for scholars, imams, or teachers<br />
+              • Not a final word on religion
+            </p>
+            <p>
+              Treat everything here as a conversation starter and a study companion. If you have
+              serious spiritual or legal questions, speak to a qualified religious teacher or imam.
+            </p>
+          </div>
+        </div>
+
+        <div class="subcard" style="margin-top:16px;">
+          <div class="subcard-title">Contact &amp; Next Steps</div>
+          <p class="small-muted">
+            This is a prototype layout. Real Qur’an text, real question banks, and deeper number
+            meanings can be plugged in later.
+          </p>
+          <div class="chip">
+            <span class="mono">support@example.com</span>
+            <span>Contact (placeholder)</span>
+          </div>
+        </div>
+
+        <div class="back-link">
+          <button class="btn btn-ghost" onclick="showSection('home')">Back to Home</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW: PERIOD CHART ROOM -->
+  <section id="periodChartRoom" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Lifespan: Period Cycle</h2>
+            <small>The Three Great Stages of Your Life</small>
+          </div>
+          <div class="badge badge-gold">
+            <span>Period Energy Chart</span>
+          </div>
+        </div>
+        <p>Your life is seen as three major "Period Cycles," each lasting for roughly 25-30 years. Each period is defined by a single-digit number (from your birth date) that represents the central theme and lessons of that stage. This is based on the vibrational triangle from your CPAL-R.</p>
+        
+        <div class="chart-container" id="periodChartContainer">
+          <p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your Period Cycle chart.</p>
+        </div>
+
+        <h3>Period Energy Explanations</h3>
+        <p class="small-muted">Each number represents a core energy or set of lessons for that Period of your life.</p>
+        <div class="explanation-grid" id="periodExplanationGrid">
+          <p class="small-muted">Explanations will appear once your profile is calculated.</p>
+        </div>
+
+        <div class="back-link">
+          <button class="btn btn-ghost" onclick="showSection('who')">Back to 'Who Am I?'</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW: PINNACLE CHART ROOM -->
+  <section id="pinnacleChartRoom" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Lifespan: Pinnacle Cycle</h2>
+            <small>The Four Clouds of Development</small>
+          </div>
+          <div class="badge badge-gold">
+            <span>Pinnacle Cloud Chart</span>
+          </div>
+        </div>
+        <p>Pinnacles are four distinct periods of development (or "Clouds") that you experience. Each Pinnacle has a specific duration and a number that represents the energy, opportunities, and challenges of that time. Calculating them helps you understand what to focus on during each stage.</p>
+        
+        <div class="chart-container" id="pinnacleChartContainer">
+          <p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your Pinnacle Cycle chart.</p>
+        </div>
+
+        <h3>Pinnacle Energy Explanations</h3>
+        <p class="small-muted">Each number represents the core theme for that Pinnacle of your life.</p>
+        <div class="explanation-grid" id="pinnacleExplanationGrid">
+          <p class="small-muted">Explanations will appear once your profile is calculated.</p>
+        </div>
+
+        <div class="back-link">
+          <button class="btn btn-ghost" onclick="showSection('who')">Back to 'Who Am I?'</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW: LIFE CHALLENGE ROOM -->
+  <section id="lifeChallengeRoom" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Lifespan: Life Challenge</h2>
+            <small>The Four Hurdles on Your Path</small>
+          </div>
+          <div class="badge badge-gold">
+            <span>Challenge Energy Chart</span>
+          </div>
+        </div>
+        <p>Your Life Challenges are not punishments; they are specific hurdles or weaknesses you are here to overcome and master. They are calculated by finding the *difference* between the points of your vibrational triangle. Mastering them brings wisdom and strength.</p>
+        
+        <div class="chart-container" id="challengeChartContainer">
+          <p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your Life Challenge chart.</p>
+        </div>
+
+        <h3>Challenge Energy Explanations</h3>
+        <p class="small-muted">Each number represents a core lesson. Your 1st Challenge is active in your youth, the 2nd in adulthood, and the 3rd & 4th are present throughout your life.</p>
+        <div class="explanation-grid" id="challengeExplanationGrid">
+          <p class="small-muted">Explanations will appear once your profile is calculated.</p>
+        </div>
+
+        <div class="back-link">
+          <button class="btn btn-ghost" onclick="showSection('who')">Back to 'Who Am I?'</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW: TIC TAC TOE ROOM -->
+  <section id="quizGame" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Game Room: Quizzes</h2>
+            <small>Play · Learn · Earn Credits</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>Seeker Level</span>
+          </div>
+        </div>
+
+        <!-- NEW: Game Credits Display -->
+        <div class="game-credits-display">
+          <div class="subcard-title">AMA Seeker Credits</div>
+          <div class="game-credits-display-lg">
+            <span class="credits-display-value" id="quizGameCreditsDisplay">300</span> Credits
+          </div>
+          <span class="credits-welcome-message">Welcome, Seeker.</span>
+        </div>
+
+        <div class="grid">
+          <div>
+            <div class="btn-row" style="margin-bottom:8px;">
+              <button class="btn btn-primary" type="button" onclick="setQuizMode('general')">
+                General Quizzes
+              </button>
+              <button class="btn btn-ghost" type="button" onclick="setQuizMode('chapter')">
+                Chapter Quizzes
+              </button>
+            </div>
+
+            <div id="generalQuizControls">
+              <div class="field-group">
+                <label for="topicSelect">Choose Topic</label>
+                <select id="topicSelect" onchange="loadQuizTopic()"></select>
+              </div>
+            </div>
+
+            <div id="chapterQuizControls" style="display:none;">
+              <div class="field-group">
+                <label for="chapterSelect">Choose Surah (Chapter)</label>
+                <select id="chapterSelect" onchange="onChapterSelectChange()"></select>
+              </div>
+              <p class="small-muted">
+                Each chapter quiz will offer up to 10 simple questions about that Surah’s number,
+                length, and identity. This version uses basic structural questions you can later
+                replace with deeper content.
+              </p>
+              <div class="btn-row" style="margin-top:6px;">
+                <button class="btn btn-primary" type="button" onclick="startChapterQuiz()">
+                  Start Chapter Quiz
+                </button>
+              </div>
+            </div>
+
+            <div class="subcard">
+              <div id="quizQuestion" class="quiz-question small-muted">
+                Select a topic to get your first question.
+              </div>
+              <div id="quizOptions" class="quiz-options"></div>
+              <div id="quizFeedback" class="small-muted" style="margin-top:6px;"></div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn btn-primary" type="button" onclick="nextQuizQuestion()">
+                Next Question
+              </button>
+              <button class="btn btn-ghost" type="button" onclick="resetQuiz()">
+                Reset Quiz
+              </button>
+            </div>
+
+            <div class="back-link">
+              <button class="btn btn-ghost" onclick="showSection('quiz')">Back to Game Room Hub</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="subcard">
+              <div class="subcard-title">Score &amp; Credits</div>
+              <div class="quiz-meta" id="quizMeta">
+                <span>Questions answered: 0</span>
+                <span>Correct: 0</span>
+                <span>Credits: 0</span>
+              </div>
+              <p class="small-muted" style="margin-top:6px;">
+                Correct answers add +1 credit. Over time you can rank seekers:
+                Beginner, Explorer, Sage.
+              </p>
+            </div>
+
+            <div class="subcard">
+              <div class="subcard-title">Sample Topics</div>
+              <p class="small-muted">
+                • Main themes of selected Surahs<br />
+                • Basic pillars and beliefs<br />
+                • Stories of prophets within the Qur’an
+              </p>
+              <p class="small-muted">
+                All questions here are simple placeholders to prove the mechanic. You can swap in
+                the real question sets later.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="tictactoeRoom" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Game Room: Tic Tac Toe</h2>
+            <small>Play against the AI. Higher level = higher risk/reward.</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>X vs O</span>
+          </div>
+        </div>
+
+        <div class="game-credits-display">
+          <div class="subcard-title">AMA Seeker Credits</div>
+          <div class="game-credits-display-lg">
+            <span class="credits-display-value" id="tttCreditsDisplay">300</span> Credits
+          </div>
+          <span class="credits-welcome-message">Welcome, Seeker.</span>
+        </div>
+
+        <div>
+          <!-- NEW: Level Selector -->
+          <div class="subcard">
+            <div class="subcard-title" style="text-align: center; margin-bottom: 8px;">Select Difficulty</div>
+            <div class="level-selector">
+              <div>
+                <input type="radio" id="tttEasy" name="tttLevel" value="easy" onchange="setTicTacToeLevel('easy')">
+                <label for="tttEasy">Easy (+1 / -1)</label>
+              </div>
+              <div>
+                <input type="radio" id="tttMedium" name="tttLevel" value="medium" checked onchange="setTicTacToeLevel('medium')">
+                <label for="tttMedium">Medium (+3 / -3)</label>
+              </div>
+              <div>
+                <input type="radio" id="tttHard" name="tttLevel" value="hard" onchange="setTicTacToeLevel('hard')">
+                <label for="tttHard">Hard (+5 / -5)</label>
+              </div>
+            </div>
+          </div>
+
+          <div id="tttGrid" class="ttt-grid">
+            <!-- Cells will be generated by JS -->
+          </div>
+          <div id="tttStatus" class="ttt-status">Player X's turn (Medium)</div>
+          <div class="btn-row" style="justify-content: center;">
+            <button class="btn btn-primary" onclick="resetTicTacToe()">New Game</button>
+          </div>
+        </div>
+
+        <div class="back-link">
+          <button class="btn btn-ghost" onclick="showSection('quiz')">Back to Game Room Hub</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW: CHECKERS ROOM (Placeholder) -->
+  <section id="checkersRoom" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Game Room: Checkers</h2>
+            <small>Classic 8x8 strategy board game.</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>Coming Soon</span>
+          </div>
+        </div>
+
+        <div class="game-credits-display">
+          <div class="subcard-title">AMA Seeker Credits</div>
+          <div class="game-credits-display-lg">
+            <span class="credits-display-value" id="checkersCreditsDisplay">300</span> Credits
+          </div>
+          <span class="credits-welcome-message">Welcome, Seeker.</span>
+        </div>
+
+        <div>
+          <h3>Checkers Room Coming Soon</h3>
+          <p>This room will host a full checkers game. For now, here is a simple board representation.</p>
+          <div class="placeholder-board">
+. r . r . r . r
+r . r . r . r .
+. r . r . r . r
+. . . . . . . .
+. . . . . . . .
+b . b . b . b .
+. b . b . b . b
+b . b . b . b .
+          </div>
+        </div>
+
+        <div class="back-link">
+          <button class="btn btn-ghost" onclick="showSection('quiz')">Back to Game Room Hub</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW: CHESS ROOM (Placeholder) -->
+  <section id="chessRoom" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Game Room: Chess</h2>
+            <small>The ultimate game of strategy.</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>Coming Soon</span>
+          </div>
+        </div>
+
+        <div class="game-credits-display">
+          <div class="subcard-title">AMA Seeker Credits</div>
+          <div class="game-credits-display-lg">
+            <span class="credits-display-value" id="chessCreditsDisplay">300</span> Credits
+          </div>
+          <span class="credits-welcome-message">Welcome, Seeker.</span>
+        </div>
+
+        <div>
+          <h3>Chess Room Coming Soon</h3>
+          <p>This room will host a full chess game. For now, here is a simple board representation.</p>
+          <div class="placeholder-board">
+r n b q k b n r
+p p p p p p p p
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+P P P P P P P P
+R N B Q K B N R
+          </div>
+        </div>
+
+        <div class="back-link">
+          <button class="btn btn-ghost" onclick="showSection('quiz')">Back to Game Room Hub</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW: SUDOKU ROOM (Placeholder) -->
+  <section id="sudokuRoom" class="section">
+    <div class="card">
+      <div class="card-inner">
+        <div class="section-header">
+          <div>
+            <h2>Game Room: Sudoku</h2>
+            <small>The logic-based number-placement puzzle.</small>
+          </div>
+          <div class="badge badge-soft">
+            <span>Coming Soon</span>
+          </div>
+        </div>
+
+        <div class="game-credits-display">
+          <div class="subcard-title">AMA Seeker Credits</div>
+          <div class="game-credits-display-lg">
+            <span class="credits-display-value" id="sudokuCreditsDisplay">300</span> Credits
+          </div>
+          <span class="credits-welcome-message">Welcome, Seeker.</span>
+        </div>
+
+        <div>
+          <h3>Sudoku Room Coming Soon</h3>
+          <p>This room will host a full Sudoku game generator. For now, here is a simple grid.</p>
+          <div class="placeholder-board">
+5 3 . | . 7 . | . . .
+6 . . | 1 9 5 | . . .
+. 9 8 | . . . | . 6 .
+------+-------+------
+8 . . | . 6 . | . . 3
+4 . . | 8 . 3 | . . 1
+7 . . | . 2 . | . . 6
+------+-------+------
+. 6 . | . . . | 2 8 .
+. . . | 4 1 9 | . . 5
+. . . | . 8 . | . 7 9
+          </div>
+        </div>
+
+        <div class="back-link">
+          <button class="btn btn-ghost" onclick="showSection('quiz')">Back to Game Room Hub</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ---------- GLOBAL STATE ----------
+  let currentProfile = {
+    name: null,
+    mantra: null,
+    day: null,
+    month: null,
+    year: null,
+    C: null,
+    P: null,
+    A: null,
+    L: null,
+    CSKID: null,
+    mayanTone: null,
+    mayanGlyph: null,
+    mayanTrecena: null,
+    DSKID: null,
+    // NEW: Challenge Numbers
+    C1: null,
+    C2: null,
+    C3: null,
+    C4: null
+  };
+
+  let quizState = {
+    topic: null,
+    index: 0,
+    answered: 0,
+    correct: 0,
+    credits: 0,
+    welcomeBonusApplied: false
+  };
+
+  let seekerName = "Seeker";
+  // FIX: Make sure audioEnabled is globally defined
+  let audioEnabled = true; 
+  let playIntroAudio = false; // Flag to control the intro audio gimmick
+
+  let surahList = [];
+  let vancouverTempC = null;
+  let lastUniversalNumber = null;
+
+  // NEW: Tic Tac Toe state
+  let ttt_board = ['', '', '', '', '', '', '', '', ''];
+  let ttt_currentPlayer = 'X'; // This is always the human
+  let ttt_player = 'X';
+  let ttt_ai = 'O';
+  let ttt_gameActive = true;
+  let ttt_level = 'medium'; // 'easy', 'medium', 'hard'
+
+  // NEW: Tone.js Synths for game sounds
+  let winSynth, loseSynth, drawSynth, clickSynth;
+
+
+  const dailyPrayers = {
+    1: {
+      ar: "اللهم افتح لي أبواب الخير والقيادة بحق",
+      en: "O Allah, open for me the doors of good and right leadership today."
+    },
+    2: {
+      ar: "اللهم اجعل هذا اليوم سلامًا بيني وبين خلقك",
+      en: "O Allah, make this day peace between me and Your creation."
+    },
+    3: {
+      ar: "اللهم بارك في كلماتي وألهمني القول الحسن",
+      en: "O Allah, bless my words and inspire me to speak what is good."
+    },
+    4: {
+      ar: "اللهم ثبّت أقدامي على طريق الانضباط",
+      en: "O Allah, keep my feet firm on the path of discipline and structure."
+    },
+    5: {
+      ar: "اللهم اجعل حركتي اليوم حرة في طاعتك",
+      en: "O Allah, let my changes and movement today be in obedience to You."
+    },
+    6: {
+      ar: "اللهم اجعل بيتي وقَلبي دارًا للرحمة",
+      en: "O Allah, make my home and my heart a place of mercy and care."
+    },
+    7: {
+      ar: "اللهم زدني علمًا ونورًا في الطريق",
+      en: "O Allah, increase me in knowledge and inner light on my path."
+    },
+    8: {
+      ar: "اللهم ارزقني قوةً بعدلٍ ورحمة",
+      en: "O Allah, grant me strength that is balanced with justice and mercy."
+    },
+    9: {
+      ar: "اللهم استعملني في خدمة عبادك المحتاجين",
+      en: "O Allah, use me today in service of Your servants who are in need."
+    }
+  };
+
+  function getVancouverDateTime() {
+    try {
+      const now = new Date();
+      const dateFmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Vancouver",
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+      const timeFmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Vancouver",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      });
+      return {
+        dateStr: dateFmt.format(now),
+        timeStr: timeFmt.format(now)
+      };
+    } catch (e) {
+      return { dateStr: "", timeStr: "" };
+    }
+  }
+
+  async function fetchVancouverWeather() {
+    try {
+      const url = "https://api.open-meteo.com/v1/forecast?latitude=49.2827&longitude=-123.1207&current_weather=true";
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json && json.current_weather && typeof json.current_weather.temperature === "number") {
+        vancouverTempC = json.current_weather.temperature;
+      }
+    } catch (e) {
+      console.warn("Weather fetch failed:", e);
+    }
+  }
+  let currentSurahNumber = 1;
+  let currentSurahAyahs = [];
+  let currentSurahTranslationAyahs = [];
+  let surahAudioUrl = null;
+
+  // NEW: Global explanation map
+  const energyMap = {
+      1: { title: "The Leader", text: "A time for independence, innovation, and learning to stand on your own feet. Strong focus on 'self' and new beginnings." },
+      2: { title: "The Diplomat", text: "A time for cooperation, sensitivity, and building relationships. Focus is on 'others', patience, and harmony." },
+      3: { title: "The Artist", text: "A time for creativity, social expression, and communication. Focus is on joy, self-expression, and finding your voice." },
+      4: { title: "The Builder", text: "A time for hard work, structure, and building a secure foundation. Focus is on discipline, order, and gradual progress." },
+      5: { title: "The Traveler", text: "A time for change, freedom, and adventure. Focus is on flexibility, variety, and adapting to the unexpected." },
+      6: { title: "The Nurturer", text: "A time for responsibility, family, and community. Focus is on love, domestic matters, and compassionate service." },
+      7: { title: "The Seeker", text: "A time for introspection, analysis, and spiritual growth. Focus is on seeking truth, gaining knowledge, and inner wisdom." },
+      8: { title: "The Executive", text: "A time for personal power, material success, and control. Focus is on business, finance, and manifesting in the physical world." },
+      9: { title: "The Humanitarian", text: "A time for compassion, completion, and selfless service. Focus is on letting go, wisdom, and giving back to the world." }
+  };
+
+  // NEW: Global challenge map
+  const challengeMap = {
+      0: { title: "The Choice", text: "A challenge of indecision or feeling you have too many options. You must learn to listen to your inner voice and make a choice.", recommendation: "Practice trusting your gut on small decisions to build confidence." },
+      1: { title: "Independence", text: "A challenge of feeling overlooked or lacking self-confidence. You must learn to stand up for yourself and validate your own worth.", recommendation: "Practice self-assertion in safe environments. Your voice matters." },
+      2: { title: "Sensitivity", text: "An empathic challenge. You are hypersensitive to surroundings, disorder, and judgment, needing serenity.", recommendation: "Create a calm personal space. Black seed oil (Nigella Sativa) is known to be anxiolytic." },
+      3: { title: "Expression", text: "A challenge in expressing your feelings. You may fear criticism, become superficial, or scatter your energy.", recommendation: "Practice creative expression (journaling, art) to find your true voice." },
+      4: { title: "Structure", text: "A challenge of limits. You may be too rigid and stubborn, or too disorganized and avoidant of work.", recommendation: "Use a planner to build routine, but schedule 'free time' to avoid burnout." },
+      5: { title: "Freedom", text: "A challenge of change and restlessness. You may fear new experiences, or (conversely) be irresponsible and unable to commit.", recommendation: "Try new things in small steps, but make a point to finish what you start." },
+      6: { title: "Idealism", text: "A challenge of 'the high horse'. You see life as it 'should be' and judge reality (and people) for its imperfections.", recommendation: "Read more to be open-minded. Life is perfect *with* its imperfections." },
+      7: { title: "Trust", text: "A challenge of skepticism. You may be overly-analytical, withdrawn, and fear trusting both your own intuition and others.", recommendation: "Practice mindfulness, connect with nature, and take small leaps of faith." },
+      8: { title: "Materialism", text: "A challenge with material wealth, power, and fame. You may fear material loss or misuse authority.", recommendation: "Practice gratitude for non-material things. Remember that true Health is the real Wealth." }
+  };
+
+
+  // ---------- SPLASH ----------
+  function enterAppBase(soundFlag) {
+    const nameInput = document.getElementById("splashName").value.trim();
+    seekerName = nameInput || "Seeker";
+    audioEnabled = soundFlag;
+
+    // <-- NEW: Set the flag to true if sound is on
+    if (audioEnabled) {
+      playIntroAudio = true;
+    }
+
+    const welcomeSpan = document.getElementById("welcomeName");
+    if (welcomeSpan) welcomeSpan.textContent = seekerName;
+
+    const splash = document.getElementById("splash");
+    if (splash) splash.style.display = "none";
+
+    // One-time welcome bonus for quizzes
+    if (!quizState.welcomeBonusApplied) {
+      quizState.credits += 300;
+      quizState.welcomeBonusApplied = true;
+      if (typeof updateQuizMeta === "function") {
+        try {
+          updateQuizMeta();
+        } catch (e) {}
+      }
+    }
+
+    speakWelcome();
+  }
+
+  function speakWelcome() {
+    if (!audioEnabled || !("speechSynthesis" in window)) {
+      // <-- NEW: If no speech, try to play intro surah directly
+      playIntroSurah(); 
+      return;
+    }
+
+    const say = () => {
+      const dt = getVancouverDateTime();
+      const dateStr = dt.dateStr;
+      const timeStr = dt.timeStr;
+      let text = `Welcome to AMA Muslim Koran App, ${seekerName}.`;
+      if (dateStr) {
+        text += ` Today is ${dateStr} in Vancouver.`;
+      }
+      if (timeStr) {
+        text += ` The local time is ${timeStr}.`;
+      }
+      if (vancouverTempC !== null) {
+        const rounded = Math.round(vancouverTempC);
+        text += ` The temperature is about ${rounded} degrees Celsius.`;
+      }
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.onend = () => {
+        if (lastUniversalNumber !== null) {
+          speakDailyPrayer(lastUniversalNumber);
+        } else {
+          // <-- NEW: If no daily prayer, play intro surah
+          playIntroSurah();
+        }
+      };
+      window.speechSynthesis.speak(utter);
+    };
+
+    if (vancouverTempC === null) {
+      fetchVancouverWeather().then(say).catch(say);
+    } else {
+      say();
+    }
+  }
+
+
+  function enterApp() {
+    const soundOn = document.getElementById("splashSound").checked;
+    enterAppBase(soundOn);
+  }
+
+  function enterAppMuted() {
+    enterAppBase(false);
+  }
+
+  // ---------- NAV ----------
+  function showSection(id) {
+    document.querySelectorAll(".section").forEach((sec) => {
+      sec.classList.remove("active");
+    });
+    const section = document.getElementById(id);
+    if (section) section.classList.add("active");
+
+    document.querySelectorAll(".nav-links button").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+    const map = {
+      home: 0,
+      birth: 1,
+      quran: 2,
+      quiz: 3,
+      stories: 4,
+      about: 5
+    };
+    const navButtons = document.querySelectorAll(".nav-links button");
+    if (map[id] != null && navButtons[map[id]]) {
+      navButtons[map[id]].classList.add("active");
+    }
+    
+    // NEW: Update all credits displays on any section change
+    updateAllCreditsDisplays();
+    updateAllWelcomeMessages();
+
+    // UPDATED: Call chart updates when showing sections
+    if (id === "who") updateWhoRoom();
+    if (id === "where") updateWhereRoom();
+    if (id === "how") updateHowRoom();
+    if (id === "become") updateBecomeRoom();
+    if (id === "periodChartRoom") updatePeriodChartRoom();
+    if (id === "pinnacleChartRoom") updatePinnacleChartRoom();
+    if (id === "lifeChallengeRoom") updateLifeChallengeRoom();
+
+    // NEW: Game room audio welcomes
+    if (id === 'quizGame') speakGamerWelcome('Quizzes');
+    if (id === 'tictactoeRoom') speakGamerWelcome('Tic Tac Toe');
+    if (id === 'checkersRoom') speakGamerWelcome('Checkers');
+    if (id === 'chessRoom') speakGamerWelcome('Chess');
+    if (id === 'sudokuRoom') speakGamerWelcome('Sudoku');
+    if (id === 'quiz') updateAllCreditsDisplays(); // Ensure quiz credits are updated
+  }
+
+  // ---------- BASIC NUMERICAL UTIL ----------
+  function digitRoot(n) {
+    n = Math.abs(parseInt(n, 10) || 0);
+    while (n > 9) {
+      let sum = 0;
+      String(n)
+        .split("")
+        .forEach((d) => {
+          sum += parseInt(d, 10) || 0;
+        });
+      n = sum;
+    }
+    return n;
+  }
+
+  // ---------- UNIVERSAL DAY (VANCOUVER) ----------
+  function calcUniversalToday() {
+    try {
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Vancouver",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(now);
+      let y = 0,
+        m = 0,
+        d = 0;
+      parts.forEach((p) => {
+        if (p.type === "year") y = parseInt(p.value, 10);
+        if (p.type === "month") m = parseInt(p.value, 10);
+        if (p.type === "day") d = parseInt(p.value, 10);
+      });
+      const dateStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const sumDigits = ("" + y + m + d)
+        .split("")
+        .reduce((acc, c) => acc + (parseInt(c, 10) || 0), 0);
+      const universal = digitRoot(sumDigits);
+      lastUniversalNumber = universal;
+      const dt = getVancouverDateTime();
+      const el = document.getElementById("universalToday");
+      if (el) {
+        let base = `For Vancouver date ${dateStr}, the universal life path number of the day is ${universal}.`;
+        if (dt.timeStr) {
+          base += ` Local time: ${dt.timeStr}.`;
+        }
+        if (vancouverTempC !== null) {
+          base += ` Approx. temperature: ${Math.round(vancouverTempC)} °C.`;
+        }
+        el.textContent = base;
+      }
+      const whereToday = document.getElementById("whereToday");
+      if (whereToday) {
+        whereToday.textContent = `Vancouver calendar date ${dateStr} reduces to a universal day of ${universal}.`;
+      }
+      renderDailyPrayer(universal);
+    } catch (e) {
+      console.warn("Universal today calc failed:", e);
+    }
+  }
+
+  function renderDailyPrayer(universalNumber) {
+    const container = document.getElementById("dailyPrayer");
+    if (!container) return;
+
+    const prayer = dailyPrayers[universalNumber] || null;
+    if (!prayer) {
+      container.innerHTML = "";
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="subcard" style="margin-top:8px;">
+        <div class="subcard-title">Prayer of the Day (Universal ${universalNumber})</div>
+        <p class="small-muted" style="direction:rtl; text-align:right; font-size:16px; margin-bottom:4px;">
+          ${prayer.ar}
+        </p>
+        <p class="small-muted">${prayer.en}</p>
+      </div>
+    `;
+  }
+
+  function speakDailyPrayer(universalNumber) {
+    if (!audioEnabled || !("speechSynthesis" in window)) {
+      // <-- NEW: If no speech, try to play intro surah
+      playIntroSurah();
+      return;
+    }
+    const prayer = dailyPrayers[universalNumber] || null;
+    if (!prayer) {
+      // <-- NEW: If no prayer, play intro surah
+      playIntroSurah();
+      return;
+    }
+
+    const text = `Prayer of the day for universal number ${universalNumber}: ${prayer.en}`;
+    const utter = new SpeechSynthesisUtterance(text);
+    
+    // <-- NEW: Play the intro surah when the prayer speech ends
+    utter.onend = () => {
+      playIntroSurah();
+    };
+
+    window.speechSynthesis.speak(utter);
+  }
+
+  // ---------- CPAL / CSKID ----------
+  function calculateProfile() {
+    const nameInput = document.getElementById("nameInput").value.trim();
+    const bloodTypeEl = document.getElementById("bloodTypeSelect");
+    const bloodType = bloodTypeEl ? bloodTypeEl.value : "";
+    const dobValue = document.getElementById("dobInput").value;
+    const errorEl = document.getElementById("birthError");
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+
+    if (!nameInput) {
+      errorEl.textContent = "Please enter a first name.";
+      errorEl.style.display = "block";
+      return;
+    }
+    if (!dobValue) {
+      errorEl.textContent = "Please select your birth date.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    const [yearStr, monthStr, dayStr] = dobValue.split("-");
+    const day = parseInt(dayStr, 10);
+    const month = parseInt(monthStr, 10);
+    const year = parseInt(yearStr, 10);
+
+    if (!day || !month || !year) {
+      errorEl.textContent = "Birth date is invalid.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    const C = nameInput[0].toUpperCase();
+    const psyche = digitRoot(day);
+    const monthRoot = digitRoot(month);
+    const A = digitRoot(psyche + monthRoot);
+    const yearRoot = digitRoot(year);
+    const L = digitRoot(A + yearRoot);
+    const CSKID = `${C}${psyche}${A}${L}`;
+
+    const mayan = AMA_MAYAN_TZOLKIN_TRECENA(day, month, year);
+    const mayanTone = mayan.tone;
+    const mayanGlyph = mayan.glyph;
+    const mayanTrecena = mayan.trecena;
+    const DSKID = `${CSKID}-${mayanGlyph}`;
+
+    currentProfile = {
+      name: nameInput,
+      bloodType: bloodType || null,
+      day,
+      month,
+      year,
+      C,
+      P: psyche,
+      A,
+      L,
+      CSKID,
+      mayanTone,
+      mayanGlyph,
+      mayanTrecena,
+      DSKID
+    };
+
+    renderProfile();
+    updateSuggestedReading();
+    updateWhoRoom();
+    updateWhereRoom();
+    updateHowRoom();
+    updateBecomeRoom();
+    // NEW: Update welcome messages if name changed
+    updateAllWelcomeMessages();
+  }
+
+  function resetProfile() {
+    currentProfile = {
+      name: null,
+      bloodType: null,
+      day: null,
+      month: null,
+      year: null,
+      C: null,
+      P: null,
+      A: null,
+      L: null,
+      CSKID: null,
+      mayanTone: null,
+      mayanGlyph: null,
+      mayanTrecena: null,
+      DSKID: null,
+      // NEW:
+      C1: null,
+      C2: null,
+      C3: null,
+      C4: null
+    };
+    document.getElementById("nameInput").value = "";
+    const btEl = document.getElementById("bloodTypeSelect");
+    if (btEl) btEl.selectedIndex = 0;
+    document.getElementById("dobInput").value = "";
+    document.getElementById("cpalDisplay").innerHTML =
+      '<p class="small-muted">Enter your details and your CPAL-R will appear here.</p>';
+    document.getElementById("triangleDisplay").innerHTML = "";
+    // UPDATED: Reset codesDisplay to new structure
+    document.getElementById("codesDisplay").innerHTML =
+      '<p class="small-muted" style="margin-bottom: 4px;"><strong>MGKID = CL</strong> — Moniker. Who am I?</p>' +
+      '<p class="small-muted" style="margin-bottom: 4px;"><strong>CSKID = CPAL</strong> — Cornerstone Birth Key. Where am I?</p>' +
+      '<p class="small-muted"><strong>DSKID = CSKID + R</strong> — Destiny Birth Key. What am I to become?</p>' +
+      '<p class="small-muted" style="margin-top: 8px;">Calculate your profile to see your personal code buttons.</p>';
+    document.getElementById("mayanDisplay").innerHTML =
+      '<p class="small-muted">We use the AMA in-house Mayan Tzolkin algorithm to calculate your Tone (1–13), Day Glyph, and Trecena Glyph (cycle leader).</p>';
+    
+    // UPDATED: Reset new 'Who' room divs
+    document.getElementById("whoContent").innerHTML = '<p class="small-muted">Calculate your CPAL in the AMA Birth Code Room first, then return here.</p>';
+    const periodEl = document.getElementById("periodCycleContent");
+    const pinnacleEl = document.getElementById("pinnacleCycleContent");
+    // NEW:
+    const challengeEl = document.getElementById("lifeChallengeContent"); 
+    if(periodEl) periodEl.innerHTML = '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your 3 Life Periods.</p>';
+    if(pinnacleEl) pinnacleEl.innerHTML = '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your 4 Pinnacle Cycles.</p>';
+    // NEW:
+    if(challengeEl) challengeEl.innerHTML = '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your 4 Life Challenges.</p>';
+
+    // NEW: Reset chart rooms
+    const periodChartContainer = document.getElementById("periodChartContainer");
+    const periodExplanationGrid = document.getElementById("periodExplanationGrid");
+    const pinnacleChartContainer = document.getElementById("pinnacleChartContainer");
+    const pinnacleExplanationGrid = document.getElementById("pinnacleExplanationGrid");
+    // NEW:
+    const challengeChartContainer = document.getElementById("challengeChartContainer");
+    const challengeExplanationGrid = document.getElementById("challengeExplanationGrid");
+
+    if (periodChartContainer) periodChartContainer.innerHTML = '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your Period Cycle chart.</p>';
+    if (periodExplanationGrid) periodExplanationGrid.innerHTML = '<p class="small-muted">Explanations will appear once your profile is calculated.</p>';
+    if (pinnacleChartContainer) pinnacleChartContainer.innerHTML = '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your Pinnacle Cycle chart.</p>';
+    if (pinnacleExplanationGrid) pinnacleExplanationGrid.innerHTML = '<p class="small-muted">Explanations will appear once your profile is calculated.</p>';
+    // NEW:
+    if (challengeChartContainer) challengeChartContainer.innerHTML = '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your Life Challenge chart.</p>';
+    if (challengeExplanationGrid) challengeExplanationGrid.innerHTML = '<p class="small-muted">Explanations will appear once your profile is calculated.</p>';
+
+
+    updateSuggestedReading();
+    updateWhoRoom();
+    updateWhereRoom();
+    updateHowRoom();
+    updateBecomeRoom();
+    // NEW: Update welcome messages to "Seeker"
+    updateAllWelcomeMessages();
+  }
+
+  function renderProfile() {
+    const cpalEl = document.getElementById("cpalDisplay");
+    const triangleEl = document.getElementById("triangleDisplay");
+    const codesEl = document.getElementById("codesDisplay");
+    const mayanEl = document.getElementById("mayanDisplay");
+
+    const mRoot = digitRoot(currentProfile.month || 0);
+    const dRoot = digitRoot(currentProfile.day || 0);
+    const yRoot = digitRoot(currentProfile.year || 0);
+
+    // UPDATED: Added 'R' chip
+    cpalEl.innerHTML = `
+      <p>
+        <span class="code-chip"><span>C</span><span class="mono">${currentProfile.C}</span></span>
+        <span class="code-chip"><span>P</span><span class="mono">${currentProfile.P}</span></span>
+        <span class="code-chip"><span>A</span><span class="mono">${currentProfile.A}</span></span>
+        <span class="code-chip"><span>L</span><span class="mono">${currentProfile.L}</span></span>
+        <span class="code-chip"><span>R</span><span class="mono">${currentProfile.mayanGlyph}</span></span>
+      </p>
+      <p class="small-muted">
+        Name: <span class="highlight">${currentProfile.name}</span><br />
+        Psyche (P) from day of birth → ${currentProfile.day} → ${currentProfile.P}<br />
+        Attitude (A) from P + month root → ${currentProfile.P} + ${digitRoot(
+          currentProfile.month
+        )} → ${currentProfile.A}<br />
+        Life Path (L) from A + year root → ${currentProfile.A} + ${digitRoot(
+          currentProfile.year
+        )} → ${currentProfile.L}
+      </p>
+    `;
+
+    triangleEl.innerHTML = `
+      <p class="small-muted">
+        Vibrational triangle (month root – day root – year root · life periods): 
+        <span class="mono">${mRoot}-${dRoot}-${yRoot}</span>
+      </p>
+    `;
+
+    // UPDATED: Replaced codes with clickable buttons and new explanations
+    const mgkid = `${currentProfile.C}${currentProfile.L}`;
+    codesEl.innerHTML = `
+      <div class="btn-row" style="margin-top:0; margin-bottom: 8px;">
+          <button class="btn btn-outline" type="button" onclick="showSection('who')">
+            MGKID <span class="mono" style="margin-left: 4px;">${mgkid}</span>
+          </button>
+          <button class="btn btn-outline" type="button" onclick="showSection('where')">
+            CSKID <span class="mono" style="margin-left: 4px;">${currentProfile.CSKID}</span>
+          </button>
+          <button class="btn btn-outline" type="button" onclick="showSection('become')">
+            DSKID <span class="mono" style="margin-left: 4px;">${currentProfile.DSKID}</span>
+          </button>
+      </div>
+      <p class="small-muted" style="margin-bottom: 4px;">
+        <strong>MGKID = CL</strong> (${currentProfile.C} + ${currentProfile.L}) — Moniker. Who am I?
+      </p>
+      <p class="small-muted" style="margin-bottom: 4px;">
+        <strong>CSKID = CPAL</strong> (${currentProfile.C}${currentProfile.P}${currentProfile.A}${currentProfile.L}) — Cornerstone Birth Key. Where am I?
+      </p>
+      <p class="small-muted">
+        <strong>DSKID = CSKID + R</strong> (${currentProfile.CSKID} + ${currentProfile.mayanGlyph}) — Destiny Birth Key. What am I to become?
+      </p>
+    `;
+
+    mayanEl.innerHTML = `
+      <p class="small-muted">
+        Galactic Tone: <span class="highlight">${currentProfile.mayanTone}</span><br />
+        Day Glyph: <span class="highlight">${currentProfile.mayanGlyph}</span><br />
+        Trecena Glyph: <span class="highlight">${currentProfile.mayanTrecena}</span>
+      </p>
+    `;
+  }
+
+  // ---------- MAYAN TZOLKIN (AMA ALGORITHM) ----------
+  function AMA_MAYAN_TZOLKIN_TRECENA(day, month, year) {
+    const glyphs = [
+      "Ahau",
+      "Imix",
+      "Ik",
+      "Akbal",
+      "Kan",
+      "Chicchan",
+      "Cimi",
+      "Manik",
+      "Lamat",
+      "Muluc",
+      "Oc",
+      "Chuen",
+      "Eb",
+      "Ben",
+      "Ix",
+      "Men",
+      "Cib",
+      "Caban",
+      "Etznab",
+      "Cauac"
+    ];
+
+    const a = Math.floor((14 - month) / 12);
+    const y = year + 4800 - a;
+    const m = month + 12 * a - 3;
+    const jd =
+      day +
+      Math.floor((153 * m + 2) / 5) +
+      365 * y +
+      Math.floor(y / 4) -
+      Math.floor(y / 100) +
+      Math.floor(y / 400) -
+      32045;
+
+    const d = jd - 584283;
+
+    let tone = ((d % 13) + 1 + 3) % 13;
+    if (tone === 0) tone = 13;
+
+    const glyph = glyphs[((d % 20) + 20) % 20];
+    const trecenaStart = d - ((tone - 1) % 13);
+    const trecenaGlyph = glyphs[((trecenaStart % 20) + 20) % 20];
+
+    return { tone, glyph, trecena: trecenaGlyph };
+  }
+
+  // ---------- QURAN API (AlQuran.Cloud) ----------
+  const API_BASE = "https://api.alquran.cloud/v1";
+
+  async function initQuran() {
+    const select = document.getElementById("surahSelect");
+    const quranDisplay = document.getElementById("quranDisplay");
+
+    if (!select || !quranDisplay) return;
+
+    select.innerHTML = '<option>Loading Surahs...</option>';
+
+    try {
+      const res = await fetch(`${API_BASE}/surah`);
+      const json = await res.json();
+      if (json.code !== 200) throw new Error("Non-200 from API");
+      surahList = json.data || [];
+      select.innerHTML = "";
+
+      surahList.forEach((s) => {
+        const opt = document.createElement("option");
+        opt.value = s.number;
+        opt.textContent = `${s.number}. ${s.englishName} (${s.englishNameTranslation})`;
+        if (s.number === 1) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      // <-- FIX: Populate the chapter quiz select dropdown
+      if (typeof populateChapterSelect === "function") {
+        populateChapterSelect();
+      }
+
+      currentSurahNumber = 1;
+      await loadSurahFromApi(1);
+    } catch (e) {
+      console.error("Failed to load Surah list from API:", e);
+      select.innerHTML =
+        '<option value="1">1. Al-Fatihah (The Opening) [fallback]</option>';
+      quranDisplay.innerHTML =
+        '<p class="small-muted">Could not reach AlQuran.Cloud. This is a fallback placeholder.</p>';
+    }
+  }
+
+  function renderSurahFromSelect() {
+    const select = document.getElementById("surahSelect");
+    const value = parseInt(select.value, 10);
+    if (!isNaN(value)) {
+      currentSurahNumber = value;
+      loadSurahFromApi(value);
+    }
+  }
+
+  async function loadSurahFromApi(surahNumber) {
+    const quranDisplay = document.getElementById("quranDisplay");
+    const searchResults = document.getElementById("searchResults");
+    const surahAudio = document.getElementById("surahAudio");
+
+    if (!quranDisplay) return;
+
+    quranDisplay.innerHTML = '<p class="small-muted">Loading Surah...</p>';
+    if (searchResults) {
+      searchResults.innerHTML =
+        '<p class="small-muted">Results will appear here. Click a result to jump to that verse.</p>';
+    }
+    if (surahAudio) {
+      surahAudio.pause();
+      surahAudio.src = "";
+      surahAudioUrl = null;
+    }
+
+    try {
+      const url = `${API_BASE}/surah/${surahNumber}/editions/quran-simple,en.sahih,ar.alafasy`;
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.code !== 200) throw new Error("Non-200 from API");
+      const data = json.data;
+
+      const arabicEdition = data[0];
+      const englishEdition = data[1];
+      const audioEdition = data[2];
+
+      currentSurahAyahs = arabicEdition.ayahs || [];
+      currentSurahTranslationAyahs = englishEdition.ayahs || [];
+
+      quranDisplay.innerHTML = "";
+      currentSurahAyahs.forEach((v, idx) => {
+        const en = currentSurahTranslationAyahs[idx]
+          ? currentSurahTranslationAyahs[idx].text
+          : "";
+        const div = document.createElement("div");
+        div.className = "ayah";
+        div.dataset.ayah = v.numberInSurah;
+        div.innerHTML = `
+          <div class="ayah-meta">Ayah ${v.numberInSurah}</div>
+          <div class="ayah-text-ar">${v.text}</div>
+          <div class="ayah-text-en">${en}</div>
+        `;
+        quranDisplay.appendChild(div);
+      });
+
+      if (audioEdition && audioEdition.ayahs && audioEdition.ayahs.length > 0) {
+        surahAudioUrl = audioEdition.ayahs[0].audio;
+        if (surahAudio && surahAudioUrl) {
+          surahAudio.src = surahAudioUrl;
+          // Note: We don't auto-play here. We let the speakWelcome() flow control it.
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load Surah content:", e);
+      quranDisplay.innerHTML =
+        '<p class="small-muted">Could not load Surah from AlQuran.Cloud. Check your internet or CORS.</p>';
+    }
+  }
+
+  function searchQuran() {
+    const query = document.getElementById("searchInput").value.trim().toLowerCase();
+    const resultsEl = document.getElementById("searchResults");
+
+    if (!resultsEl) return;
+
+    resultsEl.innerHTML = "";
+
+    if (!query) {
+      resultsEl.innerHTML =
+        '<p class="small-muted">Results will appear here. Click a result to jump to that verse.</p>';
+      return;
+    }
+
+    if (!currentSurahTranslationAyahs.length) {
+      resultsEl.innerHTML =
+        '<p class="small-muted">No translation loaded for this Surah yet.</p>';
+      return;
+    }
+
+    const matches = currentSurahTranslationAyahs.filter((v) =>
+      (v.text || "").toLowerCase().includes(query)
+    );
+
+    if (!matches.length) {
+      resultsEl.innerHTML = '<p class="small-muted">No matches in this Surah.</p>';
+      return;
+    }
+
+    matches.forEach((v) => {
+      const div = document.createElement("div");
+      div.className = "search-item";
+      const snippet =
+        v.text.length > 90 ? v.text.slice(0, 90) + "..." : v.text;
+      div.textContent = `Ayah ${v.numberInSurah}: ${snippet}`;
+      div.onclick = () => scrollToAyah(v.numberInSurah);
+      resultsEl.appendChild(div);
+    });
+  }
+
+  function scrollToAyah(ayahNumber) {
+    const container = document.getElementById("quranDisplay");
+    if (!container) return;
+    const target = container.querySelector(`.ayah[data-ayah="${ayahNumber}"]`);
+    if (target) {
+      container.scrollTo({
+        top: target.offsetTop - 8,
+        behavior: "smooth"
+      });
+      target.style.outline = "1px solid rgba(24,176,255,0.7)";
+      setTimeout(() => {
+        target.style.outline = "none";
+      }, 1200);
+    }
+  }
+
+  function toggleSurahAudio() {
+    const audioEl = document.getElementById("surahAudio");
+    const headerToggle = document.getElementById("headerSoundToggle");
+    if (!audioEl || !surahAudioUrl) return;
+    if (!audioEnabled || (headerToggle && !headerToggle.checked)) {
+      return;
+    }
+
+    if (audioEl.paused) {
+      audioEl.play().catch((err) => console.warn("Audio play blocked:", err));
+    } else {
+      audioEl.pause();
+    }
+  }
+
+  // <-- NEW: Function to play the intro Surah 1 audio
+  function playIntroSurah() {
+    // Check if this intro is allowed to play
+    if (playIntroAudio === false) return;
+
+    const audioEl = document.getElementById("surahAudio");
+    const headerToggle = document.getElementById("headerSoundToggle");
+
+    // Check global audio, header toggle, and that we are still on Surah 1
+    if (audioEnabled && 
+        currentSurahNumber === 1 && 
+        surahAudioUrl && 
+        audioEl && 
+        (!headerToggle || headerToggle.checked)) 
+    {
+        audioEl.play().catch((err) => console.warn("Intro surah play blocked:", err));
+    }
+    
+    // Set flag to false so it doesn't play again
+    playIntroAudio = false; 
+  }
+
+  function updateSuggestedReading() {
+    const el = document.getElementById("suggestedReading");
+    if (!el) return;
+    if (!currentProfile || !currentProfile.CSKID) {
+      el.textContent =
+        "Once you generate your CSKID and DSKID, this box can suggest Surahs or themes linked to your profile.";
+      return;
+    }
+    el.innerHTML = `
+      For seeker <span class="highlight">${currentProfile.name}</span> with CSKID 
+      <span class="mono">${currentProfile.CSKID}</span> and DSKID 
+      <span class="mono">${currentProfile.DSKID}</span>, you might start with:
+      <br />• <strong>Al-Fatihah</strong> – as a daily opening.
+      <br />• One “light” Surah that speaks to guidance, mercy, or patience.
+      <br /><span class="small-muted">These are generic suggestions. You can wire in a real mapping later.</span>
+    `;
+  }
+
+  // ---------- QUIZ ----------
+  const quizData = [
+    {
+      topic: "Surah Al-Fatihah",
+      questions: [
+        {
+          q: "Al-Fatihah is often described as...",
+          options: [
+            "A chapter about rules of trade",
+            "The Opening of the Qur’an and of prayer",
+            "A list of food laws",
+            "A detailed biography of the Prophet ﷺ"
+          ],
+          correct: 1
+        },
+        {
+          q: "Which phrase starts Al-Fatihah?",
+          options: [
+            "In the name of Allah, the Entirely Merciful, the Especially Merciful",
+            "O mankind, worship your Lord",
+            "Say: He is Allah, One",
+            "By the morning brightness"
+          ],
+          correct: 0
+        },
+        {
+          q: "One central request in Al-Fatihah is...",
+          options: [
+            "Increase us in wealth",
+            "Show us the straight path",
+            "Give us more land",
+            "Remove all hardship instantly"
+          ],
+          correct: 1
+        }
+      ]
+    },
+    {
+      topic: "Surah Al-Baqarah (Themes)",
+      questions: [
+        {
+          q: "Al-Baqarah includes guidance on...",
+          options: [
+            "Only dietary laws",
+            "Only inheritance law",
+            "Faith, law, stories, and community guidance",
+            "Astronomy and physics only"
+          ],
+          correct: 2
+        },
+        {
+          q: "Ayat al-Kursi (2:255) is widely known for...",
+          options: [
+            "Trade contracts",
+            "Verse of the Throne and divine knowledge",
+            "Restrictions on travel",
+            "Details of marriage"
+          ],
+          correct: 1
+        }
+      ]
+    },
+    {
+      topic: "Faith & Practice (General)",
+      questions: [
+        {
+          q: "According to the Qur’an, guidance is ultimately from...",
+          options: ["Wealth", "Family", "Allah", "Luck"],
+          correct: 2
+        },
+        {
+          q: "Mercy in Islam is most closely tied to...",
+          options: [
+            "Harshness and punishment",
+            "Compassion and forgiveness",
+            "Winning arguments",
+            "Showing off knowledge"
+          ],
+          correct: 1
+        },
+        {
+          q: "One basic pillar of practice is...",
+          options: [
+            "Zakah (obligatory charity)",
+            "Astrology",
+            "Owning property",
+            "Traveling yearly"
+          ],
+          correct: 0
+        }
+      ]
+    }
+  ];
+
+
+  // Quiz mode: 'general' or 'chapter'
+  let quizMode = "general";
+  let currentChapterNumber = null;
+
+  function setQuizMode(mode) {
+    quizMode = mode === "chapter" ? "chapter" : "general";
+    const generalControls = document.getElementById("generalQuizControls");
+    const chapterControls = document.getElementById("chapterQuizControls");
+    if (generalControls && chapterControls) {
+      if (quizMode === "general") {
+        generalControls.style.display = "";
+        chapterControls.style.display = "none";
+      } else {
+        generalControls.style.display = "none";
+        chapterControls.style.display = "";
+      }
+    }
+    resetQuiz();
+  }
+
+  function populateChapterSelect() {
+    const sel = document.getElementById("chapterSelect");
+    if (!sel || !Array.isArray(surahList) || surahList.length === 0) return;
+    sel.innerHTML = "";
+    surahList.forEach((s) => {
+      const opt = document.createElement("option");
+      const title = s.englishNameTranslation
+        ? `${s.number}. ${s.englishName} — ${s.englishNameTranslation}`
+        : `${s.number}. ${s.englishName}`;
+      opt.value = s.number;
+      opt.textContent = title;
+      sel.appendChild(opt);
+    });
+    // Set the initial currentChapterNumber
+    if (surahList.length > 0) {
+      currentChapterNumber = surahList[0].number;
+    }
+  }
+
+  function onChapterSelectChange() {
+    const sel = document.getElementById("chapterSelect");
+    if (!sel) return;
+    const val = parseInt(sel.value, 10);
+    if (!isNaN(val)) {
+      currentChapterNumber = val;
+    }
+  }
+
+  function buildChapterQuiz(chapterNumber) {
+    if (!Array.isArray(surahList) || surahList.length === 0) return null;
+    const surah = surahList.find((s) => s.number === chapterNumber);
+    if (!surah) return null;
+
+    const allNumbers = surahList.map((s) => s.number);
+    function pickOtherNumbers(count) {
+      const pool = allNumbers.filter((n) => n !== chapterNumber);
+      const res = [];
+      while (res.length < count && pool.length > 0) {
+        const idx = Math.floor(Math.random() * pool.length);
+        res.push(pool.splice(idx, 1)[0]);
+      }
+      return res;
+    }
+
+    const ayaCount = surah.numberOfAyahs || 7;
+    const deltas = [-3, -1, 1, 3];
+    const lengthOptions = [ayaCount];
+    deltas.forEach((d) => {
+      const v = ayaCount + d;
+      if (v > 0 && !lengthOptions.includes(v)) lengthOptions.push(v);
+    });
+    while (lengthOptions.length < 4) {
+      const extra = ayaCount + (Math.floor(Math.random() * 7) - 3);
+      if (extra > 0 && !lengthOptions.includes(extra)) lengthOptions.push(extra);
+    }
+    lengthOptions.sort(() => Math.random() - 0.5);
+
+    const meaning = surah.englishNameTranslation || surah.englishName;
+
+    const q1Others = pickOtherNumbers(3);
+    const q1Options = [chapterNumber, ...q1Others].sort(() => Math.random() - 0.5);
+
+    const allNames = surahList.map((s) => s.englishName);
+    const namePool = allNames.filter((n) => n !== surah.englishName);
+    const nameOthers = [];
+    while (nameOthers.length < 3 && namePool.length > 0) {
+      const idx = Math.floor(Math.random() * namePool.length);
+      nameOthers.push(namePool.splice(idx, 1)[0]);
+    }
+    const q2Options = [surah.englishName, ...nameOthers].sort(() => Math.random() - 0.5);
+
+    const allMeanings = surahList
+      .map((s) => s.englishNameTranslation || s.englishName)
+      .filter((t) => !!t);
+    const meaningPool = allMeanings.filter((t) => t !== meaning);
+    const meaningOthers = [];
+    while (meaningOthers.length < 3 && meaningPool.length > 0) {
+      const idx = Math.floor(Math.random() * meaningPool.length);
+      meaningOthers.push(meaningPool.splice(idx, 1)[0]);
+    }
+    const q3Options = [meaning, ...meaningOthers].sort(() => Math.random() - 0.5);
+
+    const questions = [
+      {
+        q: `Which chapter number is Surah "${surah.englishName}"?`,
+        options: q1Options.map((n) => String(n)),
+        correct: q1Options.indexOf(chapterNumber)
+      },
+      {
+        q: `Approximately how many verses does Surah "${surah.englishName}" contain?`,
+        options: lengthOptions.map((n) => String(n)),
+        correct: lengthOptions.indexOf(ayaCount)
+      },
+      {
+        q: `What is the English title/meaning associated with Surah "${surah.englishName}"?`,
+        options: q3Options,
+        correct: q3Options.indexOf(meaning)
+      },
+      {
+        q: `Which Arabic name belongs to chapter ${chapterNumber}?`,
+        options: q2Options,
+        correct: q2Options.indexOf(surah.englishName)
+      }
+    ];
+
+    // Duplicate / rephrase variations until ~10 questions
+    while (questions.length < 10) {
+      questions.push({
+        q: `Surah "${surah.englishName}" is chapter number...`,
+        options: q1Options.map((n) => String(n)),
+        correct: q1Options.indexOf(chapterNumber)
+      });
+    }
+
+    return {
+      topic: `Chapter Quiz: Surah ${chapterNumber}`,
+      questions
+    };
+  }
+
+  function startChapterQuiz() {
+    if (!currentChapterNumber) {
+      const sel = document.getElementById("chapterSelect");
+      if (sel && sel.value) currentChapterNumber = parseInt(sel.value, 10);
+    }
+    if (!currentChapterNumber) return;
+    const set = buildChapterQuiz(currentChapterNumber);
+    if (!set) return;
+
+    quizState.topic = set.topic;
+    quizState.index = 0;
+    quizState.answered = 0;
+    quizState.correct = 0;
+    // keep credits and welcome bonus
+    const metaEl = document.getElementById("quizQuestion");
+    if (metaEl) {
+      metaEl.textContent = `Chapter Quiz — ${set.topic}`;
+    }
+    showQuizQuestionFromSet(set);
+  }
+
+  function showQuizQuestionFromSet(set) {
+    const qEl = document.getElementById("quizQuestion");
+    const optsEl = document.getElementById("quizOptions");
+    const fbEl = document.getElementById("quizFeedback");
+    if (!qEl || !optsEl || !set) return;
+
+    const questions = set.questions;
+    if (quizState.index >= questions.length) quizState.index = 0;
+    const current = questions[quizState.index];
+
+    qEl.textContent = current.q;
+    optsEl.innerHTML = "";
+
+    current.options.forEach((optText, i) => {
+      const btn = document.createElement("button");
+      btn.textContent = optText;
+      btn.onclick = () => {
+        const buttons = optsEl.querySelectorAll("button");
+        buttons.forEach((b) => {
+          b.disabled = true;
+        });
+        if (i === current.correct) {
+          btn.classList.add("correct");
+          quizState.correct += 1;
+          quizState.credits += 1;
+          if (fbEl) fbEl.textContent = "Correct.";
+        } else {
+          btn.classList.add("incorrect");
+          if (fbEl) fbEl.textContent = "Not quite. Try the next one.";
+        }
+        quizState.answered += 1;
+        quizState.index += 1;
+        updateQuizMeta();
+      };
+      optsEl.appendChild(btn);
+    });
+  }
+  function initQuiz() {
+    const select = document.getElementById("topicSelect");
+    if (!select) return;
+    select.innerHTML = "";
+    quizData.forEach((t, idx) => {
+      const opt = document.createElement("option");
+      opt.value = t.topic;
+      opt.textContent = t.topic;
+      if (idx === 0) opt.selected = true;
+      select.appendChild(opt);
+    });
+    quizState.topic = quizData[0].topic;
+    quizState.index = 0;
+    quizState.answered = 0;
+    quizState.correct = 0;
+    quizState.credits = 0;
+    renderQuizQuestion();
+    updateQuizMeta();
+  }
+
+  function getCurrentTopicData() {
+    return quizData.find((t) => t.topic === quizState.topic) || quizData[0];
+  }
+
+  function loadQuizTopic() {
+    const select = document.getElementById("topicSelect");
+    if (!select) return;
+    quizState.topic = select.value;
+    quizState.index = 0;
+    quizState.answered = 0;
+    quizState.correct = 0;
+    // <-- FIX: Do not reset total credits when changing topic
+    // quizState.credits = 0; 
+    renderQuizQuestion();
+    updateQuizMeta();
+  }
+
+  function renderQuizQuestion() {
+    const topicData = getCurrentTopicData();
+    const qObj = topicData.questions[quizState.index % topicData.questions.length];
+    const qEl = document.getElementById("quizQuestion");
+    const optionsEl = document.getElementById("quizOptions");
+    const feedbackEl = document.getElementById("quizFeedback");
+
+    if (!qEl || !optionsEl || !feedbackEl) return;
+
+    qEl.textContent = qObj.q;
+    optionsEl.innerHTML = "";
+    feedbackEl.textContent = "Select an answer.";
+
+    qObj.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = opt;
+      btn.onclick = () => answerQuiz(idx);
+      optionsEl.appendChild(btn);
+    });
+  }
+
+  function answerQuiz(idx) {
+    const topicData = getCurrentTopicData();
+    const qObj = topicData.questions[quizState.index % topicData.questions.length];
+    const optionsButtons = Array.from(
+      document.getElementById("quizOptions").querySelectorAll("button")
+    );
+    const feedbackEl = document.getElementById("quizFeedback");
+
+    optionsButtons.forEach((b) => {
+      b.disabled = true;
+      b.classList.remove("correct", "incorrect");
+    });
+
+    if (idx === qObj.correct) {
+      optionsButtons[idx].classList.add("correct");
+      quizState.correct += 1;
+      quizState.credits += 1;
+      feedbackEl.textContent = "Correct. +1 credit.";
+    } else {
+      optionsButtons[idx].classList.add("incorrect");
+      optionsButtons[qObj.correct].classList.add("correct");
+      feedbackEl.textContent = "Not quite. The correct answer is highlighted.";
+    }
+
+    quizState.answered += 1;
+    updateQuizMeta();
+  }
+
+  function nextQuizQuestion() {
+    quizState.index += 1;
+    renderQuizQuestion();
+  }
+
+  function resetQuiz() {
+    quizState.index = 0;
+    quizState.answered = 0;
+    quizState.correct = 0;
+    // <-- FIX: Do not reset total credits on a simple reset
+    // quizState.credits = 0;
+    renderQuizQuestion();
+    updateQuizMeta();
+  }
+
+  function updateQuizMeta() {
+    // This function is now just a wrapper to call the global display update
+    updateAllCreditsDisplays();
+  }
+
+  // NEW: Global function to update ALL credit displays
+  function updateAllCreditsDisplays() {
+    const credits = quizState.credits;
+    document.querySelectorAll('.credits-display-value').forEach(el => {
+      el.textContent = credits;
+    });
+
+    // Also update the quiz-specific meta text if it exists
+    const metaEl = document.getElementById("quizMeta");
+    if (!metaEl) return;
+    let level = "Seeker";
+    if (quizState.credits >= 320) level = "Guru"; // +300 bonus
+    else if (quizState.credits >= 310) level = "Master";
+    else if (quizState.credits >= 305) level = "Explorer";
+
+    metaEl.innerHTML = `
+      <span>Questions answered: ${quizState.answered}</span>
+      <span>Correct: ${quizState.correct}</span>
+      <span>Credits: ${quizState.credits} (${level})</span>
+    `;
+  }
+
+  // NEW: Global function to update all welcome messages
+  function updateAllWelcomeMessages() {
+    document.querySelectorAll('.credits-welcome-message').forEach(el => {
+      el.textContent = `Welcome, ${seekerName}.`;
+    });
+  }
+
+  // NEW: Function to speak game room welcomes
+  function speakGamerWelcome(gameName) {
+    if (!audioEnabled || !("speechSynthesis" in window) || !gameName) return;
+    
+    let text = `Welcome to the ${gameName} Room, ${seekerName}.`;
+    if (gameName === 'Tic Tac Toe') {
+      text += ` Win a game for 10 credits. Good luck.`;
+    } else if (gameName === 'Quizzes') {
+      text += ` You have ${quizState.credits} credits.`;
+    } else {
+      text += ` This game is coming soon.`;
+    }
+
+    const utter = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utter);
+  }
+
+
+  // ---------- WHO ROOM ----------
+  // UPDATED: Expanded function to populate Period, Pinnacle, and Challenge cycles
+  function updateWhoRoom() {
+    const whoEl = document.getElementById("whoContent");
+    const periodEl = document.getElementById("periodCycleContent");
+    const pinnacleEl = document.getElementById("pinnacleCycleContent");
+    // NEW:
+    const challengeEl = document.getElementById("lifeChallengeContent");
+
+    if (!whoEl || !periodEl || !pinnacleEl || !challengeEl) return;
+
+    if (!currentProfile || !currentProfile.C || currentProfile.L == null) {
+      whoEl.innerHTML =
+        '<p class="small-muted">Calculate your CPAL in the AMA Birth Code Room first, then return here.</p>';
+      periodEl.innerHTML =
+        '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your 3 Life Periods.</p>';
+      pinnacleEl.innerHTML =
+        '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your 4 Pinnacle Cycles.</p>';
+      // NEW:
+      challengeEl.innerHTML =
+        '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your 4 Life Challenges.</p>';
+      return;
+    }
+
+    // 1. Update MGKID content (whoContent)
+    const CL = `${currentProfile.C}${currentProfile.L}`;
+    whoEl.innerHTML = `
+      <p class="small-muted">
+        Seeker: <span class="highlight">${currentProfile.name}</span><br />
+        Cornerstone: <span class="mono">${currentProfile.C}</span><br />
+        Life Path (L): <span class="mono">${currentProfile.L}</span><br />
+        CL Moniker: <span class="mono">${CL}</span>
+      </p>
+      <p class="small-muted">
+        Your Moniker (<span class="mono">${CL}</span>) is your identity tag: the letter hints at your approach, the number hints at the path you walk.
+      </p>
+    `;
+
+    // 2. Calculate and Update Period Cycle
+    const mRoot = digitRoot(currentProfile.month);
+    const dRoot = digitRoot(currentProfile.day);
+    const yRoot = digitRoot(currentProfile.year);
+    
+    // *** THIS IS THE FIX for the SyntaxError ***
+    const periodMap = {
+        1: "Entrepreneurial, self-serving, doing your own thing.",
+        2: "Diplomatic, sensitive, building partnerships.",
+        3: "Creative, expressive, communicating.",
+        4: "Structured, disciplined, building foundations.",
+        5: "Freedom-seeking, adventurous, managing change.",
+        6: "Harmonizing, responsible, domestic focus.",
+        7: "Spiritual, analytical, specializing, and searching.",
+        8: "Business-focused, managerial, handling finances.",
+        9: "Humanitarian, compassionate, focused on service."
+    };
+    // *** END FIX ***
+
+    periodEl.innerHTML = `
+      <p class="small-muted">Your vibrational triangle is <span class="mono">${mRoot}-${dRoot}-${yRoot}</span>. This maps to three main periods in your life.</p>
+      <p class="small-muted" style="margin-top: 8px;">
+        <strong>Genesis: Period <span class="mono">${mRoot}</span></strong> (${periodMap[mRoot] || '...'})
+      </p>
+      <p class="small-muted">
+        <strong>Adulthood: Period <span class="mono">${dRoot}</span></strong> (${periodMap[dRoot] || '...'})
+      </p>
+      <p class="small-muted">
+        <strong>Exodus: Period <span class="mono">${yRoot}</span></strong> (${periodMap[yRoot] || '...'})
+      </p>
+    `;
+
+    // 3. Calculate and Update Pinnacle Cycle
+    const lifePath = currentProfile.L;
+    const childEndAge = 36 - lifePath;
+    const adultEndAge = childEndAge + 9;
+    const masterEndAge = adultEndAge + 9;
+
+    const p1 = digitRoot(dRoot + mRoot);
+    const p2 = digitRoot(dRoot + yRoot);
+    const p3 = digitRoot(p1 + p2);
+    const p4 = digitRoot(mRoot + yRoot);
+
+    pinnacleEl.innerHTML = `
+      <p class="small-muted">Your four Pinnacle Cycles (Clouds) are derived from your triangle <span class="mono">${mRoot}-${dRoot}-${yRoot}</span>.</p>
+      <p class="small-muted" style="margin-top: 8px;">
+        <strong>Childhood (Birth - ${childEndAge}): Pinnacle <span class="mono">${p1}</span></strong>
+      </p>
+      <p class="small-muted">
+        <strong>Adulthood (${childEndAge} - ${adultEndAge}): Pinnacle <span class="mono">${p2}</span></strong>
+      </p>
+      <p class="small-muted">
+        <strong>Mastership (${adultEndAge} - ${masterEndAge}): Pinnacle <span class="mono">${p3}</span></strong>
+      </p>
+      <p class="small-muted">
+        <strong>Retirement/Guru (Age ${masterEndAge}+): Pinnacle <span class="mono">${p4}</span></strong>
+      </p>
+    `;
+
+    // NEW: 4. Calculate and Update Life Challenge
+    const c1 = Math.abs(mRoot - dRoot);
+    const c2 = Math.abs(dRoot - yRoot);
+    const c3 = Math.abs(c1 - c2); // Main Challenge
+    const c4 = Math.abs(mRoot - yRoot); // 4th Challenge
+    
+    // Store in profile
+    currentProfile.C1 = c1;
+    currentProfile.C2 = c2;
+    currentProfile.C3 = c3;
+    currentProfile.C4 = c4;
+
+    challengeEl.innerHTML = `
+      <p class="small-muted">Your four Life Challenges are calculated by the *difference* between your triangle points <span class="mono">${mRoot}-${dRoot}-${yRoot}</span>.</p>
+      <p class="small-muted" style="margin-top: 8px;">
+        <strong>1st Challenge (Youth): <span class="mono">${c1}</span></strong> (diff M-D)
+      </p>
+      <p class="small-muted">
+        <strong>2nd Challenge (Adulthood): <span class="mono">${c2}</span></strong> (diff D-Y)
+      </p>
+      <p class="small-muted">
+        <strong>3rd (Main) Challenge: <span class="mono">${c3}</span></strong> (diff C1-C2)
+      </p>
+      <p class="small-muted">
+        <strong>4th (Background) Challenge: <span class="mono">${c4}</span></strong> (diff M-Y)
+      </p>
+    `;
+
+
+    // NEW: Trigger updates for the new chart rooms
+    updatePeriodChartRoom();
+    updatePinnacleChartRoom();
+    // NEW:
+    updateLifeChallengeRoom();
+  }
+
+  // ---------- WHERE ROOM ----------
+  function computeAge(year, month, day) {
+    const now = new Date();
+    let age = now.getFullYear() - year;
+    const mNow = now.getMonth() + 1;
+    const dNow = now.getDate();
+    if (mNow < month || (mNow === month && dNow < day)) {
+      age -= 1;
+    }
+    return age;
+  }
+
+  function updateWhereRoom() {
+    const el = document.getElementById("whereContent");
+    if (!el) return;
+    if (!currentProfile || currentProfile.L == null || !currentProfile.year) {
+      el.innerHTML = `
+        <p class="small-muted">
+          Once you set your CPAL in the Birth Code Room, this panel will estimate your
+          personal year by adding your Life Path to your age in the current year and
+          reducing it to a single digit.
+        </p>
+      `;
+      return;
+    }
+    const age = computeAge(currentProfile.year, currentProfile.month, currentProfile.day);
+    const personalYear = digitRoot(currentProfile.L + age);
+    el.innerHTML = `
+      <p class="small-muted">
+        Seeker: <span class="highlight">${currentProfile.name}</span><br />
+        Life Path (L): <span class="mono">${currentProfile.L}</span><br />
+        Age this year: <span class="mono">${age}</span><br />
+        Personal Year = digit root of (L + age) = digit root of (${currentProfile.L} + ${age}) → 
+        <span class="mono">${personalYear}</span>.
+      </p>
+      <p class="small-muted">
+        This number is a “time lens” for the current year – a personal realm overlay on the
+        universal year 2025. Later you can drill into personal month and personal day codes from
+        this same base.
+      </p>
+    `;
+  }
+
+  // ---------- HOW ROOM ----------
+  function getZodiacSign(day, month) {
+    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return "Aries";
+    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return "Taurus";
+    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return "Gemini";
+    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return "Cancer";
+    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return "Leo";
+    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return "Virgo";
+    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return "Libra";
+    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return "Scorpio";
+    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return "Sagittarius";
+    if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return "Capricorn";
+    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return "Aquarius";
+    if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return "Pisces";
+    return null;
+  }
+
+  function updateHowRoom() {
+    const el = document.getElementById("howContent");
+    if (!el) return;
+    const blood = document.getElementById("bloodInput").value;
+
+    if (!currentProfile || !currentProfile.day || !currentProfile.month || !currentProfile.year) {
+      el.innerHTML =
+        '<p class="small-muted">Set your CPAL-R in the Birth Code Room first. Once your birth code is active, this room will show your Sun sign, natural House, element, cell salt, and a gentle health reminder. Blood type is optional.</p>';
+      return;
+    }
+
+    const sign = getZodiacSign(currentProfile.day, currentProfile.month) || "Unknown";
+
+    const metaTable = {
+      "Aries":   { house: 1, theme: "The Warrior",        keywords: "initiative, courage, instinct",           element: "Fire (spark)",            cellSalt: "Kali Phosphate",        body: "Head, brain",                          note: "Needs steady hydration and less inflammatory, over-spiced food." },
+      "Taurus":  { house: 2, theme: "The Builder",        keywords: "stability, comfort, value",               element: "Earth (soil)",            cellSalt: "Natrum Sulphate",       body: "Throat, neck, voice",                  note: "Benefits from greens, berries, and high-fibre, unprocessed meals." },
+      "Gemini":  { house: 3, theme: "The Messenger",      keywords: "wit, duality, curiosity",                 element: "Air (split winds)",       cellSalt: "Kali Mur",              body: "Lungs, arms",                           note: "Does well with B-vitamins, nuts, seeds, and lighter, frequent meals." },
+      "Cancer":  { house: 4, theme: "The Counselor",      keywords: "nurture, roots, memory",                  element: "Water (river/lake)",      cellSalt: "Calc Fluoride",         body: "Stomach, chest",                        note: "Warm, simple meals and gut-soothing herbs support mood and digestion." },
+      "Leo":     { house: 5, theme: "The Performer",      keywords: "creativity, romance, radiance",           element: "Fire (sun)",              cellSalt: "Magnesium Phosphate",   body: "Heart, upper back",                    note: "Needs magnesium, greens, and regular movement, not only drama and sugar." },
+      "Virgo":   { house: 6, theme: "The Healer",         keywords: "health, analysis, refinement",            element: "Earth (harvest)",         cellSalt: "Potassium Sulphate",    body: "Digestive tract",                      note: "Thrives on clean, simple food and a calm eating routine." },
+      "Libra":   { house: 7, theme: "The Diplomat",       keywords: "balance, matrimony, law",                 element: "Air (split decisions)",   cellSalt: "Sodium Phosphate",      body: "Kidneys, lower back",                  note: "Needs mineral balance, less excess salt, more water and movement." },
+      "Scorpio": { house: 8, theme: "The Alchemist",      keywords: "secrets, rebirth, intensity",             element: "Water (deep ocean)",      cellSalt: "Calcium Sulphate",      body: "Reproductive system",                  note: "Benefits from detox foods, dark berries, and good emotional outlets." },
+      "Sagittarius": { house: 9, theme: "The Seeker",     keywords: "exploration, philosophy, travel",         element: "Fire (wildfire)",         cellSalt: "Silica",                body: "Hips, thighs, liver",                   note: "Needs liver-friendly foods, bitters, and realistic pacing." },
+      "Capricorn":   { house: 10, theme: "The Mountain Goat", keywords: "status, achievement, responsibility", element: "Earth (stone)",           cellSalt: "Calcium Phosphate",     body: "Bones, joints",                         note: "Benefits from calcium-rich foods, greens, and posture awareness." },
+      "Aquarius":    { house: 11, theme: "The Visionary", keywords: "reform, friends, innovation",             element: "Air (clear winds)",       cellSalt: "Sodium Chloride (Salt)",body: "Ankles, circulation",                   note: "Needs balanced salts, electrolytes, and grounding roots or proteins." },
+      "Pisces":      { house: 12, theme: "The Mystic",    keywords: "subconscious, creativity, dreams",        element: "Water (mist/fog)",        cellSalt: "Iron Phosphate",        body: "Feet, lymph",                           note: "Needs iron-rich foods, grounding meals, and reduced intoxicants/sugar." }
+    };
+
+    const meta = metaTable[sign] || null;
+
+    let bloodNote = "";
+    if (blood === "O") {
+      bloodNote = "Type O often thrives on clean proteins, greens, and reduced heavy grains.";
+    } else if (blood === "A") {
+      bloodNote = "Type A tends toward plant-leaning, calmer diets with lighter proteins.";
+    } else if (blood === "B") {
+      bloodNote = "Type B is usually framed as adaptable, with a mix of plant and animal foods.";
+    } else if (blood === "AB") {
+      bloodNote = "Type AB is often read as a blend of A and B traits, with moderation as the key.";
+    }
+
+    if (!meta) {
+      el.innerHTML =
+        '<p class="small-muted">Birth data is set but the sign could not be resolved. Check your date and try again.</p>';
+      return;
+    }
+
+    let html = "";
+    html += '<p class="small-muted">';
+    html += 'Seeker: <span class="highlight">' + currentProfile.name + "</span><br />";
+    html += 'Sun sign (Western): <span class="mono">' + sign + "</span><br />";
+    html += 'House: <span class="mono">' + meta.house + "th — " + meta.theme + "</span><br />";
+    html += 'Element: <span class="mono">' + meta.element + "</span><br />";
+    html += 'Cell salt: <span class="mono">' + meta.cellSalt + "</span><br />";
+    html += 'Body focus: <span class="mono">' + meta.body + "</span>";
+    if (blood) {
+      html += '<br />Blood type lens: <span class="mono">' + blood + "</span>";
+    }
+    html += "</p>";
+
+    html += '<p class="small-muted">Keywords: ' + meta.keywords + ".</p>";
+    html += '<p class="small-muted">Health reminder: ' + meta.note + "</p>";
+
+    if (bloodNote) {
+      html += '<p class="small-muted">' + bloodNote + " Use it as a simple lens, not a rigid rule.</p>";
+    } else {
+      html += '<p class="small-muted">Add a blood type if you want a short Eat Right 4 Your Type style note.</p>';
+    }
+
+    el.innerHTML = html;
+  }
+
+  // ---------- BECOME ROOM ----------
+  function updateBecomeRoom() {
+    const el = document.getElementById("becomeContent");
+    if (!el) return;
+    if (!currentProfile || !currentProfile.DSKID) {
+      el.innerHTML =
+        '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room first, then return here.</p>';
+      return;
+    }
+
+    const mayanNote = {
+      "Ahau": "To become a source of light, clarity, and sovereign spirit.",
+      "Imix": "To become a source of nurturing, memory, and new beginnings.",
+      "Ik": "To become a channel for spirit, truth, and divine communication.",
+      "Akbal": "To become a dreamer who enters the void to find new possibilities.",
+      "Kan": "To become a planter of seeds, a cultivator of growth and potential.",
+      "Chicchan": "To become a vessel of life force, instinct, and body wisdom.",
+      "Cimi": "To become a bridge between worlds, comfortable with endings and surrender.",
+      "Manik": "To become a source of healing, accomplishment, and spiritual tools.",
+      "Lamat": "To become a beacon of harmony, beauty, and abundant energy.",
+      "Muluc": "To become a purified emotional channel, a signal of remembrance.",
+      "Oc": "To become a loyal companion, a guide, and a breaker of old patterns.",
+      "Chuen": "To become a master of arts, a weaver of magic, and a playful spirit.",
+      "Eb": "To become a humble servant, a harvester, and a pillar of the community.",
+      "Ben": "To become a pillar of heaven and earth, a channel for higher wisdom.",
+      "Ix": "To become a shaman, a jaguar spirit, and a seer of hidden truths.",
+      "Men": "To become a visionary, an eagle's eye, and a creator of the collective mind.",
+      "Cib": "To become a conduit of cosmic wisdom, a spiritual warrior.",
+      "Caban": "To become a force of natural order, a synchronizer, and an earth-keeper.",
+      "Etznab": "To become a mirror of truth, a sword of discernment, and a cutter of illusion.",
+      "Cauac": "To become a storm of renewal, a catalyst for change, and a restorer of peace."
+    };
+
+    const glyph = currentProfile.mayanGlyph;
+    const note = mayanNote[glyph] || "To walk your path with awareness.";
+
+    el.innerHTML = `
+      <p class="small-muted">
+        Seeker: <span class="highlight">${currentProfile.name}</span><br />
+        Mayan Signature: <span class="mono">${currentProfile.mayanTone} ${currentProfile.mayanGlyph}</span><br />
+        Trecena (Cycle): <span class="mono">${currentProfile.mayanTrecena}</span><br />
+        DSKID: <span class="mono">${currentProfile.DSKID}</span>
+      </p>
+      <p class="small-muted">
+        Your role, from the <span class="highlight">${glyph}</span> glyph, is:
+        <br /><span class="highlight">${note}</span>
+      </p>
+      <p class="small-muted">
+        (This is a placeholder reading based on the glyph name. Deeper AMA readings would fuse
+        the CSKID and the Trecena glyph together.)
+      </p>
+    `;
+  }
+
+  function lookupMayan() {
+    const input = document.getElementById("mayanLookup").value;
+    const out = document.getElementById("mayanLookupResult");
+    if (!out) return;
+    if (!input) {
+      out.innerHTML =
+        '<p class="small-muted">Enter a birth date first.</p>';
+      return;
+    }
+    const [yearStr, monthStr, dayStr] = input.split("-");
+    const day = parseInt(dayStr, 10);
+    const month = parseInt(monthStr, 10);
+    const year = parseInt(yearStr, 10);
+    if (!day || !month || !year) {
+      out.innerHTML =
+        '<p class="small-muted">Date looks invalid. Try again.</p>';
+      return;
+    }
+    const res = AMA_MAYAN_TZOLKIN_TRECENA(day, month, year);
+    out.innerHTML = `
+      <p class="small-muted">
+        For ${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}:
+        <br />Galactic Tone: <span class="mono">${res.tone}</span>
+        <br />Day Glyph: <span class="mono">${res.glyph}</span>
+        <br />Trecena Glyph: <span class="mono">${res.trecena}</span>
+      </p>
+    `;
+  }
+
+  // NEW: Function to update period chart room
+  function updatePeriodChartRoom() {
+    const container = document.getElementById("periodChartContainer");
+    const grid = document.getElementById("periodExplanationGrid");
+    if (!container || !grid) return;
+
+    if (!currentProfile || currentProfile.L == null) {
+      container.innerHTML = '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your Period Cycle chart.</p>';
+      grid.innerHTML = '<p class="small-muted">Explanations will appear once your profile is calculated.</p>';
+      return;
+    }
+
+    const mRoot = digitRoot(currentProfile.month);
+    const dRoot = digitRoot(currentProfile.day);
+    const yRoot = digitRoot(currentProfile.year);
+    const lifePath = currentProfile.L;
+
+    // Ages based on 36-LP formula for 1st period end
+    const childEndAge = 36 - lifePath;
+    // Subsequent periods are often 27 years (3x9) or just "middle" and "late"
+    const adultEndAge = childEndAge + 27;
+    
+    const age1 = `Birth - ~${childEndAge}`;
+    const age2 = `~${childEndAge} - ~${adultEndAge}`;
+    const age3 = `~${adultEndAge} - End`;
+    
+    const periods = [
+      { num: mRoot, stage: "Genesis", age: age1 },
+      { num: dRoot, stage: "Adulthood", age: age2 },
+      { num: yRoot, stage: "Exodus", age: age3 }
+    ];
+
+    container.innerHTML = ""; // Clear
+    periods.forEach(p => {
+      const chartRow = document.createElement("div");
+      chartRow.className = "chart-row";
+      chartRow.innerHTML = `
+        <div class="chart-label">
+          <strong>${p.stage}</strong>
+          (${p.age})
+        </div>
+        <div class="chart-bar-wrapper">
+          <div class="chart-bar chart-num-${p.num}">
+            Period ${p.num}
+          </div>
+        </div>
+      `;
+      container.appendChild(chartRow);
+    });
+
+    grid.innerHTML = ""; // Clear
+    for (let i = 1; i <= 9; i++) {
+      const mapEntry = energyMap[i];
+      const item = document.createElement("div");
+      item.className = "explanation-item";
+      item.innerHTML = `
+        <strong>Energy ${i} (${mapEntry.title})</strong>
+        <p>${mapEntry.text}</p>
+      `;
+      grid.appendChild(item);
+    }
+  }
+
+  // NEW: Function to update pinnacle chart room
+  function updatePinnacleChartRoom() {
+    const container = document.getElementById("pinnacleChartContainer");
+    const grid = document.getElementById("pinnacleExplanationGrid");
+    if (!container || !grid) return;
+
+    if (!currentProfile || currentProfile.L == null) {
+      container.innerHTML = '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your Pinnacle Cycle chart.</p>';
+      grid.innerHTML = '<p class="small-muted">Explanations will appear once your profile is calculated.</p>';
+      return;
+    }
+
+    const mRoot = digitRoot(currentProfile.month);
+    const dRoot = digitRoot(currentProfile.day);
+    const yRoot = digitRoot(currentProfile.year);
+    const lifePath = currentProfile.L;
+
+    const childEndAge = 36 - lifePath;
+    const adultEndAge = childEndAge + 9;
+    const masterEndAge = adultEndAge + 9;
+
+    const p1 = digitRoot(dRoot + mRoot);
+    const p2 = digitRoot(dRoot + yRoot);
+    const p3 = digitRoot(p1 + p2);
+    const p4 = digitRoot(mRoot + yRoot);
+
+    const pinnacles = [
+      { num: p1, stage: "Childhood", age: `Birth - ${childEndAge}` },
+      { num: p2, stage: "Adulthood", age: `${childEndAge} - ${adultEndAge}` },
+      { num: p3, stage: "Mastership", age: `${adultEndAge} - ${masterEndAge}` },
+      { num: p4, stage: "Retirement/Guru", age: `${masterEndAge}+` }
+    ];
+
+    container.innerHTML = ""; // Clear
+    pinnacles.forEach(p => {
+      const chartRow = document.createElement("div");
+      chartRow.className = "chart-row";
+      chartRow.innerHTML = `
+        <div class="chart-label">
+          <strong>${p.stage}</strong>
+          (${p.age})
+        </div>
+        <div class="chart-bar-wrapper">
+          <div class="chart-bar chart-num-${p.num}">
+            Pinnacle ${p.num}
+          </div>
+        </div>
+      `;
+      container.appendChild(chartRow);
+    });
+
+    grid.innerHTML = ""; // Clear
+    for (let i = 1; i <= 9; i++) {
+      const mapEntry = energyMap[i];
+      const item = document.createElement("div");
+      item.className = "explanation-item";
+      item.innerHTML = `
+        <strong>Cloud ${i} (${mapEntry.title})</strong>
+        <p>${mapEntry.text}</p>
+      `;
+      grid.appendChild(item);
+    }
+  }
+
+  // NEW: Function to update life challenge room
+  function updateLifeChallengeRoom() {
+    const container = document.getElementById("challengeChartContainer");
+    const grid = document.getElementById("challengeExplanationGrid");
+    if (!container || !grid) return;
+
+    if (!currentProfile || currentProfile.C1 == null) {
+      container.innerHTML = '<p class="small-muted">Calculate your CPAL-R in the Birth Code Room to see your Life Challenge chart.</p>';
+      grid.innerHTML = '<p class="small-muted">Explanations will appear once your profile is calculated.</p>';
+      return;
+    }
+
+    const lifePath = currentProfile.L;
+    const childEndAge = 36 - lifePath;
+
+    const challenges = [
+      { num: currentProfile.C1, stage: "1st Challenge (Youth)", age: `Birth - ~${childEndAge}` },
+      { num: currentProfile.C2, stage: "2nd Challenge (Adulthood)", age: `~${childEndAge} - End` },
+      { num: currentProfile.C3, stage: "3rd (Main) Challenge", age: `Lifelong` },
+      { num: currentProfile.C4, stage: "4th (Background) Challenge", age: `Lifelong` }
+    ];
+
+    container.innerHTML = ""; // Clear
+    challenges.forEach(c => {
+      const chartRow = document.createElement("div");
+      chartRow.className = "chart-row";
+      // Use accent color for challenges
+      chartRow.innerHTML = `
+        <div class="chart-label">
+          <strong>${c.stage}</strong>
+          (${c.age})
+        </div>
+        <div class="chart-bar-wrapper">
+          <div class="chart-bar" style="background: linear-gradient(135deg, var(--accent), #48d1ff); color: #04101b;">
+            Challenge ${c.num}
+          </div>
+        </div>
+      `;
+      container.appendChild(chartRow);
+    });
+
+    grid.innerHTML = ""; // Clear
+    const uniqueChallenges = [...new Set([currentProfile.C1, currentProfile.C2, currentProfile.C3, currentProfile.C4])].sort((a,b) => a-b);
+    
+    grid.innerHTML = '<h3>Your Challenge Mappings</h3>';
+
+    uniqueChallenges.forEach(num => {
+      const mapEntry = challengeMap[num];
+      if (mapEntry) {
+        const item = document.createElement("div");
+        item.className = "explanation-item";
+        item.style.borderColor = "var(--accent-soft)";
+        item.innerHTML = `
+          <strong style="color: var(--accent);">Challenge ${num} (${mapEntry.title})</strong>
+          <p>${mapEntry.text}</p>
+          <p style="margin-top: 6px; color: var(--sand);"><strong>Recommendation:</strong> ${mapEntry.recommendation}</p>
+        `;
+        grid.appendChild(item);
+      }
+    });
+
+    // Add a section for all challenge explanations
+    const allHeader = document.createElement("h3");
+    allHeader.textContent = "All Challenge Explanations (0-8)";
+    allHeader.style.marginTop = "16px";
+    grid.appendChild(allHeader);
+
+    for (let i = 0; i <= 8; i++) {
+      const mapEntry = challengeMap[i];
+      if(mapEntry) {
+        const item = document.createElement("div");
+        item.className = "explanation-item";
+        item.innerHTML = `
+          <strong>Challenge ${i} (${mapEntry.title})</strong>
+          <p>${mapEntry.text}</p>
+          <p style="margin-top: 6px; color: var(--sand);"><strong>Recommendation:</strong> ${mapEntry.recommendation}</p>
+        `;
+        grid.appendChild(item);
+      }
+    }
+  }
+
+  // NEW: ---------- TIC TAC TOE LOGIC ----------
+
+  // NEW: Sound effect player
+  function playGameSound(type) {
+    if (!audioEnabled || typeof Tone === 'undefined') return;
+    
+    // Ensure AudioContext is started
+    Tone.start().catch(e => console.warn("Tone.start() failed", e));
+
+    const now = Tone.now();
+    try {
+      if (type === 'win' && winSynth) {
+        winSynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n", now);
+      } else if (type === 'lose' && loseSynth) {
+        loseSynth.triggerAttackRelease("D3", "4n", now);
+        loseSynth.triggerAttackRelease("C#3", "4n", now + 0.2);
+      } else if (type === 'draw' && drawSynth) {
+        drawSynth.triggerAttackRelease("C4", "8n", now);
+        drawSynth.triggerAttackRelease("D4", "8n", now + 0.15);
+      } else if (type === 'click' && clickSynth) {
+        clickSynth.triggerAttackRelease("C2", "8n", now);
+      }
+    } catch (e) {
+      console.warn("Tone.js play sound failed:", e);
+    }
+  }
+
+  // NEW: Set game level
+  function setTicTacToeLevel(level) {
+    ttt_level = level;
+    resetTicTacToe();
+  }
+
+  function initTicTacToe() {
+    const grid = document.getElementById('tttGrid');
+    if (!grid) return;
+    grid.innerHTML = ''; // Clear board
+    ttt_board.forEach((_cell, index) => {
+      const cell = document.createElement('div');
+      cell.className = 'ttt-cell';
+      cell.dataset.index = index;
+      cell.addEventListener('click', () => handleTicTacToeClick(index));
+      grid.appendChild(cell);
+    });
+    // Set default checked radio
+    const radio = document.getElementById('tttMedium');
+    if (radio) radio.checked = true;
+  }
+
+  async function handleTicTacToeClick(index) {
+    // NEW: Ensure audio is started on first user interaction
+    if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+      await Tone.start();
+    }
+
+    if (ttt_board[index] !== '' || !ttt_gameActive || ttt_currentPlayer !== ttt_player) {
+      return;
+    }
+
+    // Player's move
+    ttt_board[index] = ttt_player;
+    playGameSound('click');
+    updateTicTacToeBoard();
+    
+    if (checkWin(ttt_board, ttt_player)) {
+      endTicTacToeGame('player');
+      return;
+    }
+
+    if (getEmptyCells(ttt_board).length === 0) {
+      endTicTacToeGame('draw');
+      return;
+    }
+
+    // AI's turn
+    ttt_currentPlayer = ttt_ai;
+    const statusEl = document.getElementById('tttStatus');
+    if (statusEl) statusEl.textContent = "AI is thinking...";
+
+    // Add a delay for realism
+    setTimeout(() => {
+      aiMove();
+    }, 500);
+  }
+
+  // NEW: AI Move function
+  function aiMove() {
+    // Check if game is still active (player might have won and it's queued)
+    if (!ttt_gameActive) return; 
+
+    const bestMoveIndex = findBestMove();
+    ttt_board[bestMoveIndex] = ttt_ai;
+    playGameSound('click');
+    updateTicTacToeBoard();
+
+    if (checkWin(ttt_board, ttt_ai)) {
+      endTicTacToeGame('ai');
+      return;
+    }
+
+    if (getEmptyCells(ttt_board).length === 0) {
+      endTicTacToeGame('draw');
+      return;
+    }
+
+    // Player's turn again
+    ttt_currentPlayer = ttt_player;
+    const statusEl = document.getElementById('tttStatus');
+    const levelCap = ttt_level.charAt(0).toUpperCase() + ttt_level.slice(1);
+    if (statusEl) statusEl.textContent = `Player X's turn (${levelCap})`;
+  }
+
+  // NEW: End game handler
+  function endTicTacToeGame(winner) {
+    ttt_gameActive = false;
+    const statusEl = document.getElementById('tttStatus');
+    let creditChange = 0;
+
+    const levelCredits = {
+      easy: 1,
+      medium: 3,
+      hard: 5
+    };
+    const credits = levelCredits[ttt_level] || 1;
+
+    if (winner === 'player') {
+      creditChange = credits;
+      statusEl.textContent = `Player X wins! +${creditChange} Credits.`;
+      playGameSound('win');
+    } else if (winner === 'ai') {
+      creditChange = -credits;
+      statusEl.textContent = `AI wins. ${creditChange} Credits.`;
+      playGameSound('lose');
+    } else { // draw
+      creditChange = 0;
+      statusEl.textContent = "It's a draw! 0 Credits.";
+      playGameSound('draw');
+    }
+
+    quizState.credits += creditChange;
+    updateAllCreditsDisplays();
+  }
+
+  function updateTicTacToeBoard() {
+    const grid = document.getElementById('tttGrid');
+    if (!grid) return;
+    const cells = grid.querySelectorAll('.ttt-cell');
+    cells.forEach((cell, index) => {
+      const value = ttt_board[index];
+      if (value) {
+        cell.textContent = value;
+        cell.classList.add(value.toLowerCase());
+      } else {
+        cell.textContent = '';
+        cell.classList.remove('x', 'o');
+      }
+    });
+  }
+
+  // UPDATED: Renamed to be more generic for Minimax
+  function checkWin(board, player) {
+    const winningConditions = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+      [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+      [0, 4, 8], [2, 4, 6]  // Diagonals
+    ];
+
+    for (const condition of winningConditions) {
+      const [a, b, c] = condition;
+      if (board[a] === player && board[b] === player && board[c] === player) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+// NEW: Get empty cells helper
+  function getEmptyCells(board) {
+    return board.map((cell, index) => (cell === '' ? index : null)).filter(index => index !== null);
+  }
+
+  // NEW: Get random move for Easy level
+  function getRandomMove() {
+    const emptyCells = getEmptyCells(ttt_board);
+    return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+  }
+
+  // NEW: Find best move based on level
+  function findBestMove() {
+    // Easy level: just pick a random spot
+    if (ttt_level === 'easy') {
+      return getRandomMove();
+    }
+    
+    // Medium level: 50% chance of perfect move, 50% random
+    if (ttt_level === 'medium') {
+      if (Math.random() > 0.5) {
+        return minimax(ttt_board, ttt_ai).index;
+      } else {
+        return getRandomMove();
+      }
+    }
+
+    // Hard level: always use minimax
+    if (ttt_level === 'hard') {
+      return minimax(ttt_board, ttt_ai).index;
+    }
+    
+    // Fallback
+    return getRandomMove();
+  }
+
+  // NEW: Minimax algorithm for unbeatable AI
+  function minimax(newBoard, player) {
+    const emptyCells = getEmptyCells(newBoard);
+
+    // Check for terminal states
+    if (checkWin(newBoard, ttt_player)) {
+      return { score: -10 }; // Human wins
+    } else if (checkWin(newBoard, ttt_ai)) {
+      return { score: 10 }; // AI wins
+    } else if (emptyCells.length === 0) {
+      return { score: 0 }; // Draw
+    }
+
+    let moves = [];
+    for (let i = 0; i < emptyCells.length; i++) {
+      let move = {};
+      move.index = emptyCells[i];
+      newBoard[emptyCells[i]] = player;
+
+      if (player === ttt_ai) {
+        let result = minimax(newBoard, ttt_player);
+        move.score = result.score;
+      } else {
+        let result = minimax(newBoard, ttt_ai);
+        move.score = result.score;
+      }
+
+      newBoard[emptyCells[i]] = ''; // Reset the board
+      moves.push(move);
+    }
+
+    let bestMove;
+    if (player === ttt_ai) {
+      // AI wants to maximize score
+      let bestScore = -Infinity;
+      for (let i = 0; i < moves.length; i++) {
+        if (moves[i].score > bestScore) {
+          bestScore = moves[i].score;
+          bestMove = i;
+        }
+      }
+    } else {
+      // Player wants to minimize score
+      let bestScore = Infinity;
+      for (let i = 0; i < moves.length; i++) {
+        if (moves[i].score < bestScore) {
+          bestScore = moves[i].score;
+          bestMove = i;
+        }
+      }
+    }
+    return moves[bestMove];
+  }
+
+
+  function resetTicTacToe() {
+    ttt_board = ['', '', '', '', '', '', '', '', ''];
+    ttt_currentPlayer = ttt_player; // Player always starts
+    ttt_gameActive = true;
+    
+    const statusEl = document.getElementById('tttStatus');
+    const levelCap = ttt_level.charAt(0).toUpperCase() + ttt_level.slice(1);
+    if (statusEl) statusEl.textContent = `Player X's turn (${levelCap})`;
+    
+    updateTicTacToeBoard(); // Visually clear the board
+  }
+
+
+  // ---------- INIT ----------
+  document.addEventListener("DOMContentLoaded", () => {
+    fetchVancouverWeather().then(() => {
+      calcUniversalToday();
+    }).catch(() => {
+      calcUniversalToday();
+    });
+    initQuran();
+    initQuiz();
+    initTicTacToe(); // NEW: Initialize the Tic Tac Toe board
+    updateAllCreditsDisplays(); // NEW: Set initial credits
+    updateAllWelcomeMessages(); // NEW: Set initial welcome messages
+  });
+</script>
+</body>
+</html>
